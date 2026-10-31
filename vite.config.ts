@@ -22,6 +22,8 @@ export default defineConfig({
     }),
     SvelteKitPWA({
       registerType: 'autoUpdate',
+      // The Android build loads files from the APK, a service worker only gets in the way there
+      disable: !!process.env.CAPACITOR,
       manifest: {
         name: 'Tintplan',
         short_name: 'Tintplan',

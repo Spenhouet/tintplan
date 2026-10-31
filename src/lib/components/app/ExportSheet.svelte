@@ -8,6 +8,7 @@
   import { Switch } from '$lib/components/ui/switch';
   import type { Editor } from '$lib/editor.svelte';
   import { embedProject, fileName, renderPng, saveFile } from '$lib/export';
+  import { isNative } from '$lib/native';
   import { m } from '$lib/paraglide/messages.js';
 
   let { open = $bindable(false), editor }: { open: boolean; editor: Editor } = $props();
@@ -15,7 +16,8 @@
   let codes = $state(true);
   let legend = $state(true);
   let busy = $state(false);
-  const canShare = typeof navigator !== 'undefined' && !!navigator.canShare;
+  // The app always hands files to the Android share sheet, which also saves to Files
+  const canShare = !isNative && typeof navigator !== 'undefined' && !!navigator.canShare;
 
   async function run(share: boolean) {
     busy = true;
@@ -52,7 +54,7 @@
     {/if}
     <Button class="flex-1" disabled={busy} onclick={() => run(false)}>
       {#if busy}<LoaderCircle class="animate-spin" />{:else}<Download />{/if}
-      {m.download()}
+      {isNative ? m.save_or_share() : m.download()}
     </Button>
   {/snippet}
 </Sheet>

@@ -37,23 +37,31 @@ System font stack. `text-caption` (11 px) for swatch codes, `text-xs` for meta t
 - Touch targets are at least 40 px.
 - `surface` is the only card style. Sheets are `rounded-3xl`, cards `rounded-2xl`, swatches `rounded-lg`.
 
+### Motion
+
+- The area scan plays once per new page, about 2.5 s, and never blocks taps. It is skipped when the system asks for reduced motion.
+- Sheets slide up on mobile and fade in centered on desktop. No looping animations.
+- Screens change with a short slide (View Transitions): deeper screens come in from the right, going up slides back. `+layout.svelte` sets the direction from the screen depth.
+- A ring shows where a tap filled or erased an area. Buttons press in slightly (`active:scale-95`/`98`).
+
 ### Inline styles
 
 Inline `style` is a lint error, with one exception: CSS custom properties for data-driven values. The `Viewport` transform is set from script, not markup.
 
 ## Components
 
-| Need                          | Use                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------- |
-| Action                        | `Button` (`default`, `secondary`, `outline`, `ghost`, `destructive`, `link`) |
-| Two to four options           | `Segmented`                                                                  |
-| Bottom sheet / dialog         | `Sheet`; `Confirm` for destructive confirmation only                         |
-| Settings list                 | `Group` with `Row` children                                                  |
-| Form field with label         | `Field` wrapping `Input` or `NativeSelect` (options may carry a `group`)     |
-| Page title bar                | `PageHeader`                                                                 |
-| Pen color chip                | `Swatch` (`sm` in strips, `md` in grids)                                     |
-| Pan, zoom and tap on the page | `Viewport`                                                                   |
-| Photo corners                 | `CornerEditor`                                                               |
+| Need                                         | Use                                                                                                    |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Action                                       | `Button` (`default`, `secondary`, `outline`, `ghost`, `destructive`, `link`, `floating` over the page) |
+| Two to four options                          | `Segmented`                                                                                            |
+| Bottom sheet / dialog                        | `Sheet`; `Confirm` for destructive confirmation only                                                   |
+| Settings list                                | `Group` with `Row` children                                                                            |
+| Form field with label                        | `Field` wrapping `Input` or `NativeSelect` (options may carry a `group`)                               |
+| Page title bar                               | `PageHeader`                                                                                           |
+| Pen color chip                               | `Swatch` (`sm` in strips, `md` in grids)                                                               |
+| Pan, zoom and tap on the page                | `Viewport`                                                                                             |
+| Photo corners                                | `CornerEditor` (magnifier while dragging)                                                              |
+| Area scan after creating or importing a page | `ScanOverlay` (WebGL, skipped with reduced motion)                                                     |
 
 Pages may add layout classes to a component. They may not change its padding, typography, color, shape or effects; add a variant instead.
 

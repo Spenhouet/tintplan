@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, replaceState } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { onDestroy, onMount } from 'svelte';
@@ -9,6 +9,7 @@
     Hash,
     ListChecks,
     LoaderCircle,
+    Maximize,
     PaintBucket,
     Pipette,
     Plus,
@@ -18,13 +19,15 @@
   } from '@lucide/svelte';
   import { toast } from 'svelte-sonner';
   import Viewport from '$lib/components/app/Viewport.svelte';
+  import ScanOverlay from '$lib/components/app/ScanOverlay.svelte';
   import Swatch from '$lib/components/app/Swatch.svelte';
   import PenPicker from '$lib/components/app/PenPicker.svelte';
   import LegendSheet from '$lib/components/app/LegendSheet.svelte';
   import ExportSheet from '$lib/components/app/ExportSheet.svelte';
   import RenameSheet from '$lib/components/app/RenameSheet.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { Toggle } from '$lib/components/ui/toggle';
+  import { fade, scale } from 'svelte/transition';
+  import { haptic } from '$lib/native';
   import { Editor, type Tool } from '$lib/editor.svelte';
   import { settings } from '$lib/settings.svelte';
   import { cn } from '$lib/utils';
@@ -36,6 +39,8 @@
   let legendOpen = $state(false);
   let exportOpen = $state(false);
   let renameOpen = $state(false);
+  /** Show the area scan once, right after a page is created or imported. */
+  let scanning = $state(false);
 
   onMount(async () => {
     const id = page.url.searchParams.get('id');
@@ -46,6 +51,13 @@
       return;
     }
     editor = e;
+    if (page.url.searchParams.has('scan')) {
+      scanning = true;
+      const url = new URL(page.url);
+      url.searchParams.delete('scan');
+      // eslint-disable-next-line svelte/no-navigation-without-resolve -- same page, query only
+      replaceState(url, {});
+    }
   });
 
   $effect(() => {
@@ -78,14 +90,27 @@
     return [...used, ...rest].slice(0, 30);
   });
 
-  function tap(x: number, y: number) {
+  let viewport = $state<Viewport>();
+  let zoomed = $state(false);
+
+  /** Short-lived rings where a tap changed the page. */
+  let ripples = $state<{ id: number; x: number; y: number; hex: string }[]>([]);
+  let rippleId = 0;
+
+  function tap(x: number, y: number, screen: { x: number; y: number }) {
     if (!editor) return;
     if (editor.tool === 'fill' && !editor.pen) {
       pickerOpen = true;
       toast(m.no_pen_hint());
       return;
     }
-    if (editor.tap(x, y)) navigator.vibrate?.(8);
+    const result = editor.tap(x, y);
+    if (!result) return;
+    haptic();
+    const hex = result === 'erased' ? '#9ca3af' : (editor.pen?.hex ?? '#7c3aed');
+    const id = ++rippleId;
+    ripples = [...ripples, { id, ...screen, hex }];
+    setTimeout(() => (ripples = ripples.filter((r) => r.id !== id)), 550);
   }
 
   function keydown(e: KeyboardEvent) {
@@ -104,8 +129,8 @@
 
 <svelte:window onkeydown={keydown} />
 
-<div class="flex h-dvh flex-col bg-background">
-  <header class="flex h-14 shrink-0 items-center gap-0.5 px-2 pt-safe">
+<div class="flex h-dvh flex-col overflow-hidden bg-background">
+  <header class="box-content flex h-14 shrink-0 items-center gap-0.5 px-2 pt-safe">
     <Button variant="ghost" size="icon" href={resolve('/')} aria-label={m.back()}>
       <ChevronLeft class="size-6" />
     </Button>
@@ -149,13 +174,20 @@
 
   <div class="min-h-0 flex-1 bg-muted">
     {#if editor}
-      <Viewport width={editor.width} height={editor.height} ontap={tap}>
+      <Viewport
+        bind:this={viewport}
+        width={editor.width}
+        height={editor.height}
+        ontap={tap}
+        onzoom={(z) => (zoomed = z)}
+      >
         <canvas bind:this={canvas} class="absolute inset-0 size-full bg-card"></canvas>
         {#if labels.length}
           <svg
             viewBox="0 0 {editor.width} {editor.height}"
             class="pointer-events-none absolute inset-0 size-full font-semibold"
             aria-hidden="true"
+            transition:fade={{ duration: 150 }}
           >
             {#each labels as l (l.region)}
               <text
@@ -172,6 +204,24 @@
             {/each}
           </svg>
         {/if}
+        {#if scanning}
+          <ScanOverlay map={editor.seg.scan} onend={() => (scanning = false)} />
+        {/if}
+        {#snippet overlay()}
+          {#each ripples as r (r.id)}
+            <span
+              class="pointer-events-none absolute top-(--y) left-(--x) size-20 animate-ripple rounded-full border-4 border-(--c)"
+              style="--x: {r.x}px; --y: {r.y}px; --c: {r.hex}"
+            ></span>
+          {/each}
+          {#if zoomed}
+            <div class="absolute right-3 bottom-3" transition:scale={{ duration: 160, start: 0.8 }}>
+              <Button variant="floating" size="icon" aria-label={m.fit_page()} onclick={() => viewport?.fit(true)}>
+                <Maximize />
+              </Button>
+            </div>
+          {/if}
+        {/snippet}
       </Viewport>
     {:else}
       <div class="flex size-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -227,28 +277,32 @@
           </button>
         </div>
       </div>
-      <div class="mx-auto flex max-w-lg items-center gap-2 px-3 py-2">
-        <div class="flex flex-1 rounded-xl bg-muted p-1" role="radiogroup">
-          {#each tools as t (t.value)}
-            <button
-              type="button"
-              role="radio"
-              aria-checked={editor.tool === t.value}
-              class={cn(
-                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium transition-all',
-                editor.tool === t.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onclick={() => editor && (editor.tool = t.value)}
-            >
-              <t.icon class="size-4" />{t.label()}
-            </button>
-          {/each}
-        </div>
-        <Toggle bind:pressed={editor.showCodes} aria-label={m.show_codes()} variant="outline">
-          <Hash />{m.codes()}
-        </Toggle>
+      <div class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 pt-1 pb-2" role="toolbar">
+        {#each tools as t (t.value)}
+          <button
+            type="button"
+            aria-pressed={editor.tool === t.value}
+            class={cn(
+              'flex h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-caption font-medium transition-all active:scale-95',
+              editor.tool === t.value ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:bg-muted'
+            )}
+            onclick={() => editor && (editor.tool = t.value)}
+          >
+            <t.icon class="size-5" />{t.label()}
+          </button>
+        {/each}
+        <button
+          type="button"
+          aria-pressed={editor.showCodes}
+          aria-label={m.show_codes()}
+          class={cn(
+            'flex h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-caption font-medium transition-all active:scale-95',
+            editor.showCodes ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:bg-muted'
+          )}
+          onclick={() => editor && (editor.showCodes = !editor.showCodes)}
+        >
+          <Hash class="size-5" />{m.codes()}
+        </button>
       </div>
     </div>
 

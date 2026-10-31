@@ -16,8 +16,12 @@ test('photo to colored page, export and reimport', async ({ page }, testInfo) =>
   await expect(page.getByRole('button', { name: 'Start coloring' })).toBeEnabled({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Start coloring' }).click();
   await expect(page).toHaveURL(/edit\?id=/);
-  const canvas = page.locator('canvas');
+  const canvas = page.locator('canvas').first();
   await expect(canvas).toBeVisible({ timeout: 15_000 });
+  // The area scan plays once, then removes itself
+  const scan = page.locator('canvas[aria-hidden="true"]');
+  await expect(scan).toBeAttached();
+  await expect(scan).toHaveCount(0, { timeout: 10_000 });
 
   await page.getByRole('button', { name: 'Choose a pen' }).first().click();
   await page.getByPlaceholder('Code, name or hex').fill('Y13');

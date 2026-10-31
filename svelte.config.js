@@ -5,8 +5,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
-    // GitHub Pages serves 404.html for unknown paths
-    adapter: adapter({ fallback: '404.html' }),
+    adapter: adapter({
+      // Capacitor needs an index.html entry point, GitHub Pages serves 404.html for unknown paths
+      fallback: process.env.CAPACITOR ? 'index.html' : '404.html'
+    }),
     paths: {
       base: process.env.NODE_ENV === 'production' ? (process.env.BASE_PATH ?? '') : ''
     },

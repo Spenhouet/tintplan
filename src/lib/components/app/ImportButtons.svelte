@@ -6,9 +6,11 @@
   import { Button } from '$lib/components/ui/button';
   import { importEmbedded } from '$lib/export';
   import { pending } from '$lib/pending';
+  import { cn } from '$lib/utils';
   import { m } from '$lib/paraglide/messages.js';
 
-  let { size = 'lg' }: { size?: 'lg' | 'default' } = $props();
+  /** `stacked` puts the buttons under each other, for narrow cards. */
+  let { size = 'lg', stacked = false }: { size?: 'lg' | 'default'; stacked?: boolean } = $props();
 
   let camera: HTMLInputElement;
   let gallery: HTMLInputElement;
@@ -24,7 +26,7 @@
       if (id) {
         toast.success(m.imported_editable());
         // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved path plus query
-        await goto(`${resolve('/edit')}?id=${id}`);
+        await goto(`${resolve('/edit')}?id=${id}&scan`);
         return;
       }
     } catch {
@@ -39,9 +41,10 @@
 <input bind:this={camera} type="file" accept="image/*" capture="environment" class="hidden" onchange={onpick} />
 <input bind:this={gallery} type="file" accept="image/*" class="hidden" onchange={onpick} />
 
-<div class="flex gap-2">
-  <Button {size} class="flex-1" onclick={() => camera.click()}><Camera />{m.take_photo()}</Button>
-  <Button {size} variant="secondary" class="flex-1" onclick={() => gallery.click()}>
+<div class={cn('flex gap-2', stacked && 'flex-col')}>
+  <Button {size} class={stacked ? 'w-full' : 'flex-1'} onclick={() => camera.click()}><Camera />{m.take_photo()}</Button
+  >
+  <Button {size} variant="secondary" class={stacked ? 'w-full' : 'flex-1'} onclick={() => gallery.click()}>
     <ImagePlus />{m.choose_image()}
   </Button>
 </div>
