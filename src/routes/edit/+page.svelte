@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, replaceState } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { onDestroy, onMount } from 'svelte';
@@ -18,6 +18,7 @@
   } from '@lucide/svelte';
   import { toast } from 'svelte-sonner';
   import Viewport from '$lib/components/app/Viewport.svelte';
+  import ScanOverlay from '$lib/components/app/ScanOverlay.svelte';
   import Swatch from '$lib/components/app/Swatch.svelte';
   import PenPicker from '$lib/components/app/PenPicker.svelte';
   import LegendSheet from '$lib/components/app/LegendSheet.svelte';
@@ -36,6 +37,8 @@
   let legendOpen = $state(false);
   let exportOpen = $state(false);
   let renameOpen = $state(false);
+  /** Show the area scan once, right after a page is created or imported. */
+  let scanning = $state(false);
 
   onMount(async () => {
     const id = page.url.searchParams.get('id');
@@ -46,6 +49,13 @@
       return;
     }
     editor = e;
+    if (page.url.searchParams.has('scan')) {
+      scanning = true;
+      const url = new URL(page.url);
+      url.searchParams.delete('scan');
+      // eslint-disable-next-line svelte/no-navigation-without-resolve -- same page, query only
+      replaceState(url, {});
+    }
   });
 
   $effect(() => {
@@ -171,6 +181,9 @@
               >
             {/each}
           </svg>
+        {/if}
+        {#if scanning}
+          <ScanOverlay map={editor.seg.scan} onend={() => (scanning = false)} />
         {/if}
       </Viewport>
     {:else}

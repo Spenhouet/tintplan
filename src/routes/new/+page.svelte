@@ -101,7 +101,7 @@
     });
     pending.file = null;
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved path plus query
-    await goto(`${resolve('/edit')}?id=${id}`, { replaceState: true });
+    await goto(`${resolve('/edit')}?id=${id}&scan`, { replaceState: true });
   }
 </script>
 

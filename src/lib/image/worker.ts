@@ -56,7 +56,7 @@ async function handle(req: Request): Promise<{ result: Response; transfer: Trans
       const s = segment(line, req.gap);
       return {
         result: { type: 'segment', line: line.data, seg: s },
-        transfer: [line.data.buffer, s.labels.buffer, s.offsets.buffer, s.pixels.buffer]
+        transfer: [line.data.buffer, s.labels.buffer, s.offsets.buffer, s.pixels.buffer, s.scan.data.buffer]
       };
     }
   }

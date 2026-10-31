@@ -15,7 +15,7 @@ Offline coloring planner. Photograph a coloring page, clean up the lines, tap ar
 
 - `src/lib/image/`: pure image code, no DOM except `render.ts`.
   - `gray.ts` gray images and filters, `warp.ts` perspective straightening, `enhance.ts` line cleanup and page detection.
-  - `segment.ts` splits line art into areas: labels on a copy with thickened lines (gap closing), narrow strips added back, then grown under the lines. Also finds each area's label spot (furthest from the outline, near the center of mass) and a per-area pixel list.
+  - `segment.ts` splits line art into areas: labels on a copy with thickened lines (gap closing), narrow strips added back, then grown under the lines. Also finds each area's label spot (furthest from the outline, near the center of mass), a per-area pixel list, and the half-resolution `scan` texture for the scan animation (`ScanOverlay.svelte`, a WebGL shader).
   - `label.ts` fits a code into an area's inscribed circle. `render.ts` composites fills under the lines (multiply) and draws labels on canvas.
   - `png.ts` writes and reads the private `tpLn` chunk that makes exported PNGs editable.
   - `worker.ts` runs decode, cleanup and segmentation off the main thread; `protocol.ts` is the typed RPC.

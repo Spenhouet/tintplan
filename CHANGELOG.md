@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Features
+
+- Area scan animation when a page opens for the first time: a light sweeps down the page and every detected area lights up in its own color with a glowing outline.
+- Magnifier while dragging a page corner, with a crosshair for precise placement. Corners now follow the finger's movement instead of jumping under it.
+
 ## 0.1.0 - 2026-10-31
 
 ### Features

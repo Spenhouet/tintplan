@@ -24,6 +24,20 @@ export interface Segmentation {
   /** Pixels of region k are `pixels[offsets[k] .. offsets[k+1]]`, for fast repainting. */
   offsets: Int32Array;
   pixels: Int32Array;
+  /** Data for the area scan animation, see `scanMap`. */
+  scan: ScanMap;
+}
+
+/**
+ * Half-resolution RGBA texture for the scan animation:
+ * R when the area lights up (its label spot's height, 0 top to 255 bottom),
+ * G distance to the area's outline in pixels (0 on lines, capped at 255),
+ * B the area's hue, A how strongly it is tinted (large areas less, 0 where there is no area).
+ */
+export interface ScanMap {
+  width: number;
+  height: number;
+  data: Uint8Array;
 }
 
 /**
@@ -112,7 +126,16 @@ export function segment(line: Gray, gap: number): Segmentation {
   const pixels = new Int32Array(n);
   for (let i = 0; i < n; i++) pixels[fill[labels[i]]++] = i;
 
-  return { width, height, labels, count, regions, offsets, pixels };
+  return {
+    width,
+    height,
+    labels,
+    count,
+    regions,
+    offsets,
+    pixels,
+    scan: scanMap(labels, dist, regions, width, height)
+  };
 }
 
 /** Like growLabels, but pixels marked -1 are walls that are never filled. */
@@ -155,4 +178,29 @@ function growWithin(labels: Int32Array, width: number, height: number) {
     }
     queue = next;
   }
+}
+
+function scanMap(labels: Int32Array, dist: Float32Array, regions: Region[], width: number, height: number): ScanMap {
+  const f = 2;
+  const w = Math.max(1, Math.floor(width / f));
+  const h = Math.max(1, Math.floor(height / f));
+  const data = new Uint8Array(w * h * 4);
+  // Golden-angle hues, so neighboring areas get clearly different colors
+  const hue = (k: number) => Math.round(((k * 0.618034) % 1) * 255);
+  // Small areas glow fully, areas covering a quarter of the page or more only faintly
+  const total = width * height;
+  const weight = regions.map((r) => Math.round(255 * Math.min(1, Math.max(0.2, 1.1 - (r.area / total) * 3.5))));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * f * width + x * f;
+      const l = labels[i];
+      const j = (y * w + x) * 4;
+      if (!l) continue;
+      data[j] = Math.round((regions[l].y / height) * 255);
+      data[j + 1] = Math.min(255, Math.round(dist[i]));
+      data[j + 2] = hue(l);
+      data[j + 3] = weight[l];
+    }
+  }
+  return { width: w, height: h, data };
 }
