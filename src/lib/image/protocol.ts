@@ -1,15 +1,29 @@
 import type { Quad } from './gray';
-import type { Segmentation } from './segment';
+import type { ScanMap, Segmentation } from './segment';
+
+/** How the page looks while coloring: clean outlines, the photo in gray, or the photo as is. */
+export type DisplayMode = 'lines' | 'gray' | 'original';
 
 export type Request =
   | { type: 'load'; blob: Blob }
-  | { type: 'process'; quad: Quad; enhance: boolean; strength: number; maxSide: number }
-  | { type: 'segment'; blob: Blob; gap: number };
+  | { type: 'detect'; quad: Quad; maxSide: number; strength: number; gapLevel: number }
+  | { type: 'display'; mode: DisplayMode }
+  | { type: 'open'; display: Blob; outline: Blob | null; gap: number; minArea: number };
 
 export type Response =
   | { type: 'load'; width: number; height: number; quad: Quad | null }
-  | { type: 'process'; png: Blob; width: number; height: number }
-  | { type: 'segment'; line: Uint8ClampedArray; seg: Segmentation };
+  | {
+      type: 'detect';
+      width: number;
+      height: number;
+      count: number;
+      scan: ScanMap;
+      outline: Blob;
+      gap: number;
+      minArea: number;
+    }
+  | { type: 'display'; image: Blob }
+  | { type: 'open'; display: Uint8ClampedArray; seg: Segmentation };
 
 type Of<T extends Response['type']> = Extract<Response, { type: T }>;
 
@@ -30,7 +44,7 @@ function getWorker(): Worker {
   return worker;
 }
 
-/** Run an image job in the worker. The worker keeps the last loaded photo for `process`. */
+/** Run an image job in the worker. The worker keeps the last photo and detection for later jobs. */
 export function run<T extends Request>(req: T): Promise<Of<T['type']>> {
   const id = nextId++;
   return new Promise((resolve, reject) => {
@@ -38,3 +52,12 @@ export function run<T extends Request>(req: T): Promise<Of<T['type']>> {
     getWorker().postMessage({ id, req });
   });
 }
+
+/** Gap closing radius in pixels for a slider level, relative to the page size. */
+export const gapPixels = (level: number, width: number, height: number) => (level * Math.max(width, height)) / 1000;
+
+/** Paper specks smaller than this join their neighbors. */
+export const minAreaFor = (width: number, height: number) => Math.round(width * height * 4e-5);
+
+/** Outline blobs smaller than this are dropped as dust. */
+export const speckFor = (width: number, height: number) => Math.max(8, Math.round(width * height * 2e-5));

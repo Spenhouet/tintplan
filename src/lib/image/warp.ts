@@ -74,3 +74,43 @@ export function fullQuad(width: number, height: number): Quad {
     { x: 0, y: height }
   ];
 }
+
+/** Like `warp`, for RGBA pixels. */
+export function warpRgba(
+  src: Uint8ClampedArray,
+  sw: number,
+  sh: number,
+  q: Quad,
+  width: number,
+  height: number
+): Uint8ClampedArray<ArrayBuffer> {
+  const [a, b, c, d, e, f, g, h] = squareToQuad(q);
+  const out = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    const v = (y + 0.5) / height;
+    for (let x = 0; x < width; x++) {
+      const u = (x + 0.5) / width;
+      const w = g * u + h * v + 1;
+      const fx = Math.min(sw - 1, Math.max(0, (a * u + b * v + c) / w - 0.5));
+      const fy = Math.min(sh - 1, Math.max(0, (d * u + e * v + f) / w - 0.5));
+      const x0 = Math.floor(fx);
+      const y0 = Math.floor(fy);
+      const x1 = Math.min(sw - 1, x0 + 1);
+      const y1 = Math.min(sh - 1, y0 + 1);
+      const tx = fx - x0;
+      const ty = fy - y0;
+      const i00 = (y0 * sw + x0) * 4;
+      const i01 = (y0 * sw + x1) * 4;
+      const i10 = (y1 * sw + x0) * 4;
+      const i11 = (y1 * sw + x1) * 4;
+      const o = (y * width + x) * 4;
+      for (let k = 0; k < 3; k++) {
+        const top = src[i00 + k] * (1 - tx) + src[i01 + k] * tx;
+        const bottom = src[i10 + k] * (1 - tx) + src[i11 + k] * tx;
+        out[o + k] = top * (1 - ty) + bottom * ty;
+      }
+      out[o + 3] = 255;
+    }
+  }
+  return out;
+}

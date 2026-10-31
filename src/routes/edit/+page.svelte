@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, replaceState } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { onDestroy, onMount } from 'svelte';
@@ -19,7 +19,6 @@
   } from '@lucide/svelte';
   import { toast } from 'svelte-sonner';
   import Viewport from '$lib/components/app/Viewport.svelte';
-  import ScanOverlay from '$lib/components/app/ScanOverlay.svelte';
   import Swatch from '$lib/components/app/Swatch.svelte';
   import PenPicker from '$lib/components/app/PenPicker.svelte';
   import LegendSheet from '$lib/components/app/LegendSheet.svelte';
@@ -29,7 +28,7 @@
   import { fade, scale } from 'svelte/transition';
   import { haptic } from '$lib/native';
   import { Editor, type Tool } from '$lib/editor.svelte';
-  import { settings } from '$lib/settings.svelte';
+  import { settings, type PenRef } from '$lib/settings.svelte';
   import { cn } from '$lib/utils';
   import { m } from '$lib/paraglide/messages.js';
 
@@ -39,8 +38,8 @@
   let legendOpen = $state(false);
   let exportOpen = $state(false);
   let renameOpen = $state(false);
-  /** Show the area scan once, right after a page is created or imported. */
-  let scanning = $state(false);
+  let replaceOpen = $state(false);
+  let replaceFrom = $state<PenRef | null>(null);
 
   onMount(async () => {
     const id = page.url.searchParams.get('id');
@@ -51,13 +50,6 @@
       return;
     }
     editor = e;
-    if (page.url.searchParams.has('scan')) {
-      scanning = true;
-      const url = new URL(page.url);
-      url.searchParams.delete('scan');
-      // eslint-disable-next-line svelte/no-navigation-without-resolve -- same page, query only
-      replaceState(url, {});
-    }
   });
 
   $effect(() => {
@@ -204,9 +196,6 @@
             {/each}
           </svg>
         {/if}
-        {#if scanning}
-          <ScanOverlay map={editor.seg.scan} onend={() => (scanning = false)} />
-        {/if}
         {#snippet overlay()}
           {#each ripples as r (r.id)}
             <span
@@ -307,7 +296,29 @@
     </div>
 
     <PenPicker bind:open={pickerOpen} {editor} />
-    <LegendSheet bind:open={legendOpen} {editor} />
+    <LegendSheet
+      bind:open={legendOpen}
+      {editor}
+      onreplace={(pen) => {
+        legendOpen = false;
+        replaceFrom = pen;
+        // Let the list close before the picker slides up
+        setTimeout(() => (replaceOpen = true), 180);
+      }}
+    />
+    <PenPicker
+      bind:open={replaceOpen}
+      {editor}
+      replacing={replaceFrom}
+      onpick={(to) => {
+        const from = replaceFrom;
+        if (!from || !editor) return;
+        editor.replace(from, to);
+        toast.success(m.replaced({ from: from.c, to: to.c }), {
+          action: { label: m.undo(), onClick: () => editor?.undo() }
+        });
+      }}
+    />
     <ExportSheet bind:open={exportOpen} {editor} />
     <RenameSheet bind:open={renameOpen} name={editor.name} onsave={(n) => editor?.rename(n)} />
   {/if}

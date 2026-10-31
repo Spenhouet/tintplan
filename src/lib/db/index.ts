@@ -19,10 +19,14 @@ export interface Project {
   updatedAt: number;
   width: number;
   height: number;
-  /** Clean line art as a grayscale PNG. */
+  /** The page as shown while coloring: clean outlines, grayscale or the original photo. */
   line: Blob;
+  /** Outlines the areas are found from (0 on lines). Missing on pages from v0.2 and older, which use `line`. */
+  outline?: Blob;
   /** Gap closing radius used to find the areas, in pixels. */
   gap: number;
+  /** Paper specks smaller than this many pixels join their neighbors. 0 on older pages. */
+  minArea?: number;
   fills: Fill[];
   /** Palette the pen picker opens with. */
   paletteId: string;

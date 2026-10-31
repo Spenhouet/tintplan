@@ -19,6 +19,55 @@
     onback?: () => void;
     children: Snippet;
   } = $props();
+
+  let content = $state<HTMLElement | null>(null);
+  /** Set when the sheet was swiped away, so the exit animation doesn't play a second time. */
+  let swiped = $state(false);
+
+  $effect(() => {
+    if (open) {
+      swiped = false;
+      if (content) content.style.transform = content.style.transition = '';
+    }
+  });
+
+  // Drag the handle or title bar down to close (bottom sheet layout only)
+  let drag: { y: number; t: number; dy: number; moved: boolean } | null = null;
+
+  function down(e: PointerEvent) {
+    if (!content || matchMedia('(min-width: 640px)').matches) return;
+    drag = { y: e.clientY, t: performance.now(), dy: 0, moved: false };
+  }
+
+  function move(e: PointerEvent) {
+    if (!drag || !content) return;
+    const dy = e.clientY - drag.y;
+    if (!drag.moved && Math.abs(dy) < 6) return;
+    if (!drag.moved) (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    drag.moved = true;
+    // Pulling up gives a little resistance, pulling down follows the finger
+    drag.dy = dy > 0 ? dy : dy * 0.2;
+    content.style.transition = 'none';
+    content.style.transform = `translateY(${drag.dy}px)`;
+  }
+
+  function up() {
+    const d = drag;
+    drag = null;
+    if (!d?.moved || !content) return;
+    const el = content;
+    const velocity = d.dy / Math.max(1, performance.now() - d.t);
+    el.style.transition = 'transform 200ms cubic-bezier(0.2, 0.7, 0.3, 1)';
+    if (d.dy > 90 || (d.dy > 30 && velocity > 0.5)) {
+      el.style.transform = 'translateY(100%)';
+      setTimeout(() => {
+        swiped = true;
+        open = false;
+      }, 180);
+    } else {
+      el.style.transform = '';
+    }
+  }
 </script>
 
 <DialogPrimitive.Root bind:open>
@@ -27,30 +76,41 @@
       class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0"
     />
     <DialogPrimitive.Content
-      class="fixed inset-x-0 bottom-0 z-50 flex max-h-11/12 flex-col rounded-t-3xl bg-popover pb-safe text-popover-foreground shadow-2xl outline-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:data-[state=closed]:slide-out-to-bottom-8 sm:data-[state=open]:slide-in-from-bottom-8"
+      bind:ref={content}
+      data-swiped={swiped}
+      class="fixed inset-x-0 bottom-0 z-50 flex max-h-11/12 flex-col rounded-t-3xl bg-popover pb-safe text-popover-foreground shadow-2xl outline-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[swiped=true]:animate-none data-[swiped=true]:opacity-0 sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:data-[state=closed]:slide-out-to-bottom-8 sm:data-[state=open]:slide-in-from-bottom-8"
     >
-      <div class="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted sm:hidden"></div>
-      <div class="flex items-center gap-2 px-5 pt-3 pb-2">
-        {#if onback}
-          <button
-            type="button"
-            class="-ml-2 flex size-9 items-center justify-center rounded-full hover:bg-muted"
-            aria-label="Back"
-            onclick={onback}
+      <div
+        class="shrink-0 touch-none"
+        role="presentation"
+        onpointerdown={down}
+        onpointermove={move}
+        onpointerup={up}
+        onpointercancel={up}
+      >
+        <div class="mx-auto mt-2 h-1 w-10 rounded-full bg-muted sm:hidden"></div>
+        <div class="flex items-center gap-2 px-5 pt-3 pb-2">
+          {#if onback}
+            <button
+              type="button"
+              class="-ml-2 flex size-9 items-center justify-center rounded-full hover:bg-muted"
+              aria-label="Back"
+              onclick={onback}
+            >
+              <ChevronLeft class="size-5" />
+            </button>
+          {/if}
+          <DialogPrimitive.Title class="flex-1 truncate text-lg font-semibold">{title}</DialogPrimitive.Title>
+          {@render header?.()}
+          <DialogPrimitive.Close
+            class="-mr-2 flex size-9 items-center justify-center rounded-full hover:bg-muted"
+            aria-label="Close"
           >
-            <ChevronLeft class="size-5" />
-          </button>
-        {/if}
-        <DialogPrimitive.Title class="flex-1 truncate text-lg font-semibold">{title}</DialogPrimitive.Title>
-        {@render header?.()}
-        <DialogPrimitive.Close
-          class="-mr-2 flex size-9 items-center justify-center rounded-full hover:bg-muted"
-          aria-label="Close"
-        >
-          <X class="size-5" />
-        </DialogPrimitive.Close>
+            <X class="size-5" />
+          </DialogPrimitive.Close>
+        </div>
       </div>
-      <div class="flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
+      <div class="flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-4">
         {@render children()}
       </div>
       {#if footer}

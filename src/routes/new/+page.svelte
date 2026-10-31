@@ -2,36 +2,45 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { onDestroy, onMount } from 'svelte';
-  import { ChevronLeft, LoaderCircle, Maximize, ScanLine } from '@lucide/svelte';
+  import { fade, slide } from 'svelte/transition';
+  import { ChevronLeft, Eye, EyeOff, LoaderCircle, Maximize, ScanLine } from '@lucide/svelte';
   import { toast } from 'svelte-sonner';
   import CornerEditor from '$lib/components/app/CornerEditor.svelte';
   import Segmented from '$lib/components/app/Segmented.svelte';
-  import { fade, slide } from 'svelte/transition';
-  import { cn } from '$lib/utils';
+  import Viewport from '$lib/components/app/Viewport.svelte';
+  import ScanOverlay from '$lib/components/app/ScanOverlay.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { run } from '$lib/image/protocol';
+  import { run, type DisplayMode, type Response } from '$lib/image/protocol';
   import { fullQuad } from '$lib/image/warp';
   import type { Quad } from '$lib/image/gray';
   import { db, newId } from '$lib/db';
   import { pending } from '$lib/pending';
   import { settings } from '$lib/settings.svelte';
+  import { cn } from '$lib/utils';
   import { m } from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime';
 
-  /** Longest side of the cleaned page. Enough for A4 line art, small enough for phones. */
-  const MAX_SIDE = 2048;
+  /** Longest side of the page. Enough detail for coloring pages, light enough for phones. */
+  const MAX_SIDE = 1800;
 
   const file = pending.file;
   const photoUrl = file ? URL.createObjectURL(file) : '';
 
-  let step = $state<'crop' | 'clean'>('crop');
+  let step = $state<'crop' | 'areas'>('crop');
   let size = $state<{ width: number; height: number } | null>(null);
   let detected = $state<Quad | null>(null);
   let quad = $state<Quad>(fullQuad(1, 1));
-  let enhance = $state<'on' | 'off'>('on');
-  let strength = $state(50);
-  let gap = $state(3);
-  let result = $state<{ url: string; png: Blob; width: number; height: number } | null>(null);
+
+  let mode = $state<DisplayMode>('lines');
+  /** Slider positions: line detection 0..100, gap closing 0..6 (per mille of the page size). */
+  let strength = $state(55);
+  let gapLevel = $state(1.5);
+
+  let detection = $state<Extract<Response, { type: 'detect' }> | null>(null);
+  /** Bumped per detection, replays the scan. */
+  let scanRun = $state(0);
+  let image = $state<{ url: string; blob: Blob; mode: DisplayMode } | null>(null);
+  let showAreas = $state(true);
   let busy = $state(false);
 
   onMount(async () => {
@@ -53,37 +62,48 @@
 
   onDestroy(() => {
     URL.revokeObjectURL(photoUrl);
-    if (result) URL.revokeObjectURL(result.url);
+    if (image) URL.revokeObjectURL(image.url);
   });
 
+  // Only the latest request wins; slider moves while a detection runs are picked up after it
   let job = 0;
-  async function process() {
+  async function detect() {
     const mine = ++job;
     busy = true;
     try {
       const r = await run({
-        type: 'process',
+        type: 'detect',
         quad: $state.snapshot(quad) as Quad,
-        enhance: enhance === 'on',
+        maxSide: MAX_SIDE,
         strength: strength / 100,
-        maxSide: MAX_SIDE
+        gapLevel
       });
       if (mine !== job) return;
-      if (result) URL.revokeObjectURL(result.url);
-      result = { url: URL.createObjectURL(r.png), png: r.png, width: r.width, height: r.height };
+      detection = r;
+      scanRun++;
+      await showImage(mode, mine);
+    } catch (e) {
+      toast.error(String(e));
     } finally {
       if (mine === job) busy = false;
     }
   }
 
+  async function showImage(next: DisplayMode, mine = job) {
+    const r = await run({ type: 'display', mode: next });
+    if (mine !== job) return;
+    if (image) URL.revokeObjectURL(image.url);
+    image = { url: URL.createObjectURL(r.image), blob: r.image, mode: next };
+  }
+
   let timer: ReturnType<typeof setTimeout>;
-  function reprocess() {
+  function redetect() {
     clearTimeout(timer);
-    timer = setTimeout(process, 250);
+    timer = setTimeout(detect, 200);
   }
 
   async function start() {
-    if (!result) return;
+    if (!detection || !image) return;
     busy = true;
     const now = Date.now();
     const id = newId();
@@ -93,17 +113,25 @@
       name: m.page_name_default({ date }),
       createdAt: now,
       updatedAt: now,
-      width: result.width,
-      height: result.height,
-      line: result.png,
-      gap,
+      width: detection.width,
+      height: detection.height,
+      line: image.blob,
+      outline: detection.outline,
+      gap: detection.gap,
+      minArea: detection.minArea,
       fills: [],
       paletteId: settings.paletteId
     });
     pending.file = null;
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved path plus query
-    await goto(`${resolve('/edit')}?id=${id}&scan`, { replaceState: true });
+    await goto(`${resolve('/edit')}?id=${id}`, { replaceState: true });
   }
+
+  const hints: Record<DisplayMode, () => string> = {
+    lines: m.mode_lines_hint,
+    gray: m.mode_gray_hint,
+    original: m.mode_original_hint
+  };
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden bg-background">
@@ -112,42 +140,56 @@
       variant="ghost"
       size="icon"
       aria-label={m.back()}
-      onclick={() => (step === 'clean' ? (step = 'crop') : goto(resolve('/')))}
+      onclick={() => (step === 'areas' ? (step = 'crop') : goto(resolve('/')))}
     >
       <ChevronLeft class="size-6" />
     </Button>
     <h1 class="flex-1 truncate text-lg font-semibold">
-      {step === 'crop' ? m.prepare_crop_title() : m.prepare_clean_title()}
+      {step === 'crop' ? m.prepare_crop_title() : m.prepare_areas_title()}
     </h1>
     <span class="mr-3 text-xs font-medium text-muted-foreground tabular">{step === 'crop' ? 1 : 2} / 2</span>
   </header>
 
-  <div class="relative grid min-h-0 flex-1 bg-muted p-4">
+  <div class="relative grid min-h-0 flex-1 bg-muted">
     {#if step === 'crop' && size}
-      <div class="min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
+      <div class="min-h-0 stack-item p-4" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
         <CornerEditor src={photoUrl} width={size.width} height={size.height} bind:quad />
       </div>
-    {:else if step === 'clean' && result}
-      <div class="relative min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
-        <img
-          src={result.url}
-          alt=""
-          class={cn('size-full object-contain transition-opacity duration-200', busy && 'opacity-60')}
-        />
+    {:else if step === 'areas' && detection && image}
+      <div class="min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
+        <Viewport width={detection.width} height={detection.height} ontap={() => (showAreas = !showAreas)}>
+          <img src={image.url} alt="" class="absolute inset-0 size-full bg-card" draggable="false" />
+          {#if showAreas}
+            {#key scanRun}
+              <ScanOverlay map={detection.scan} hold sweep={scanRun > 1 ? 0.6 : 1.2} />
+            {/key}
+          {/if}
+          {#snippet overlay()}
+            <div class="pointer-events-none absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+              <span
+                class="flex items-center gap-1.5 rounded-full bg-card/90 px-3 py-1.5 text-sm font-medium tabular shadow-lg ring-1 ring-border backdrop-blur-sm"
+              >
+                {#if busy}<LoaderCircle class="size-4 animate-spin text-primary" />{/if}
+                {m.areas_found({ count: detection?.count ?? 0 })}
+              </span>
+              <span class="pointer-events-auto">
+                <Button
+                  variant="floating"
+                  size="icon"
+                  aria-label={m.show_areas()}
+                  aria-pressed={showAreas}
+                  onclick={() => (showAreas = !showAreas)}
+                >
+                  {#if showAreas}<Eye />{:else}<EyeOff />{/if}
+                </Button>
+              </span>
+            </div>
+          {/snippet}
+        </Viewport>
       </div>
     {:else}
       <div class="flex stack-item items-center justify-center" in:fade={{ duration: 200, delay: 100 }}>
         <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
-      </div>
-    {/if}
-    {#if busy && result}
-      <div
-        class="pointer-events-none absolute inset-0 flex items-center justify-center"
-        transition:fade={{ duration: 150 }}
-      >
-        <span class="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-lg">
-          <LoaderCircle class="size-4 animate-spin text-primary" />{m.prepare_working()}
-        </span>
       </div>
     {/if}
   </div>
@@ -174,50 +216,48 @@
         size="lg"
         disabled={!size}
         onclick={() => {
-          step = 'clean';
-          process();
+          step = 'areas';
+          detection = null;
+          detect();
         }}>{m.next()}</Button
       >
     {:else}
-      <div class="flex flex-col gap-1.5">
+      <div class="flex flex-col gap-1.5" in:slide={{ duration: 180 }}>
         <Segmented
-          bind:value={enhance}
+          bind:value={mode}
           options={[
-            { value: 'on', label: m.prepare_cleanup_on() },
-            { value: 'off', label: m.prepare_cleanup_off() }
+            { value: 'lines', label: m.mode_lines() },
+            { value: 'gray', label: m.mode_gray() },
+            { value: 'original', label: m.mode_original() }
           ]}
-          onchange={reprocess}
+          onchange={(v) => detection && showImage(v)}
         />
-        <p class="px-1 text-xs text-muted-foreground">
-          {enhance === 'on' ? m.prepare_cleanup_on_hint() : m.prepare_cleanup_off_hint()}
-        </p>
+        <p class="px-1 text-xs text-muted-foreground">{hints[mode]()}</p>
       </div>
-      {#if enhance === 'on'}
-        <label class="flex flex-col gap-1" transition:slide={{ duration: 180 }}>
-          <span class="flex items-baseline justify-between text-sm font-medium">
-            {m.prepare_strength()}
-            <span class="text-xs font-normal text-muted-foreground">
-              {m.prepare_strength_faint()} – {m.prepare_strength_bold()}
-            </span>
-          </span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            bind:value={strength}
-            oninput={reprocess}
-            class="w-full accent-primary"
-          />
-        </label>
-      {/if}
+      <label class="flex flex-col gap-1">
+        <span class="flex items-baseline justify-between text-sm font-medium">
+          {m.detect_lines()}
+          <span class="text-xs font-normal text-muted-foreground">{m.detect_less()} – {m.detect_more()}</span>
+        </span>
+        <input type="range" min="0" max="100" bind:value={strength} oninput={redetect} class="w-full accent-primary" />
+      </label>
       <label class="flex flex-col gap-1">
         <span class="flex items-baseline justify-between text-sm font-medium">
           {m.prepare_gaps()}
-          <span class="text-xs font-normal text-muted-foreground tabular">{gap}</span>
+          <span class="text-xs font-normal text-muted-foreground">{m.gaps_off()} – {m.gaps_strong()}</span>
         </span>
-        <input type="range" min="0" max="8" step="1" bind:value={gap} class="w-full accent-primary" />
+        <input
+          type="range"
+          min="0"
+          max="6"
+          step="0.5"
+          bind:value={gapLevel}
+          oninput={redetect}
+          class="w-full accent-primary"
+        />
       </label>
-      <Button size="lg" disabled={!result || busy} onclick={start}>{m.prepare_start()}</Button>
+      <p class={cn('px-1 text-xs text-muted-foreground', !detection && 'invisible')}>{m.areas_hint()}</p>
+      <Button size="lg" disabled={!detection || !image || busy} onclick={start}>{m.prepare_start()}</Button>
     {/if}
   </div>
 </div>

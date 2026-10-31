@@ -10,13 +10,15 @@ interface Stored {
   labelScale: number;
   paletteId: string;
   recent: PenRef[];
+  /** Pen codes the user owns, per palette. */
+  owned: Record<string, string[]>;
 }
 
 const KEY = 'tintplan:settings';
 const RECENT_MAX = 16;
 
 function load(): Stored {
-  const fallback: Stored = { labelScale: 1, paletteId: 'copic-sketch', recent: [] };
+  const fallback: Stored = { labelScale: 1, paletteId: 'copic-sketch', recent: [], owned: {} };
   if (typeof localStorage === 'undefined') return fallback;
   try {
     return { ...fallback, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
@@ -53,6 +55,26 @@ class Settings {
   useRecent(pen: PenRef) {
     this.#s.recent = [pen, ...this.#s.recent.filter((r) => r.p !== pen.p || r.c !== pen.c)].slice(0, RECENT_MAX);
     this.#save();
+  }
+
+  /** Codes owned in a palette. Empty when the user hasn't marked any. */
+  owned(paletteId: string): string[] {
+    return this.#s.owned[paletteId] ?? [];
+  }
+
+  setOwned(paletteId: string, codes: Iterable<string>) {
+    const list = [...new Set(codes)];
+    if (list.length) this.#s.owned = { ...this.#s.owned, [paletteId]: list };
+    else {
+      const { [paletteId]: _, ...rest } = this.#s.owned;
+      this.#s.owned = rest;
+    }
+    this.#save();
+  }
+
+  toggleOwned(paletteId: string, code: string) {
+    const list = this.owned(paletteId);
+    this.setOwned(paletteId, list.includes(code) ? list.filter((c) => c !== code) : [...list, code]);
   }
 
   #save() {

@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-10-31
+
+### Features
+
+- New "Check areas" step after cropping: the detected areas light up with the scan animation and stay tinted, each in its own color. Changing line detection or gap closing finds the areas again right away, with a count of areas. Pinch to zoom in, tap to hide the areas.
+- Three ways to show the page: clean lines, gray, or the original photo with its colors. The area detection is the same for all three.
+- Much more reliable outline detection, also on pages that are already colored or shaded: colored fills, shading and gradients no longer split areas, faint outlines crossing dark shading are followed, and specks are merged away. Tested on colored and photographed coloring pages.
+- My pens: mark the pens you own, one by one or by whole sets, and the pen picker shows only those. Each range shows how many of its pens you own.
+- Brand and range are chosen from a list with color previews instead of a plain select.
+- Replace a pen everywhere: tap Replace in the pens used list and pick the new pen. Undo from the message.
+- Export shows a preview of the image before saving.
+- Sheets close by swiping them down.
+- New app icon.
+
+### Fixes
+
+- Take photo opens the camera in the Android app (it opened the gallery).
+- The top border of the first box in a sheet was cut off.
+
 ## 0.2.0 - 2026-10-31
 
 ### Features

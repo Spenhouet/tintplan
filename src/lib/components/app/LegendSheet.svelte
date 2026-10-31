@@ -1,14 +1,19 @@
 <script lang="ts">
-  import { Eraser, Replace } from '@lucide/svelte';
+  import { ArrowRightLeft, Eraser } from '@lucide/svelte';
   import Sheet from './Sheet.svelte';
   import Confirm from './Confirm.svelte';
   import { Button } from '$lib/components/ui/button';
   import type { Editor } from '$lib/editor.svelte';
+  import type { PenRef } from '$lib/settings.svelte';
   import { paletteInfo } from '$lib/pens';
   import { m } from '$lib/paraglide/messages.js';
 
-  /** The pens on this page: a shopping list, plus swapping or removing a pen everywhere. */
-  let { open = $bindable(false), editor }: { open: boolean; editor: Editor } = $props();
+  /** The pens on this page: a shopping list, plus replacing or removing a pen everywhere. */
+  let {
+    open = $bindable(false),
+    editor,
+    onreplace
+  }: { open: boolean; editor: Editor; onreplace: (pen: PenRef) => void } = $props();
 
   let confirmClear = $state(false);
 
@@ -25,27 +30,24 @@
     <ul class="flex flex-col divide-y">
       {#each pens as { pen, brand, count } (pen.p + pen.c)}
         <li class="flex items-center gap-3 py-2">
-          <span class="size-9 shrink-0 rounded-lg bg-(--c) ring-1 ring-border ring-inset" style="--c: {pen.hex}"></span>
+          <span class="size-10 shrink-0 rounded-lg bg-(--c) ring-1 ring-border ring-inset" style="--c: {pen.hex}"
+          ></span>
           <span class="min-w-0 flex-1">
             <span class="block truncate text-body font-medium">{pen.c} <span class="font-normal">{pen.n}</span></span>
             <span class="block truncate text-xs text-muted-foreground">{brand} · {m.areas_filled({ count })}</span>
           </span>
-          {#if editor.pen && (editor.pen.p !== pen.p || editor.pen.c !== pen.c)}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={m.replace_with_current({ code: editor.pen.c })}
-              title={m.replace_with_current({ code: editor.pen.c })}
-              onclick={() => editor.pen && editor.replace(pen, editor.pen)}><Replace /></Button
-            >
-          {/if}
+          <Button variant="secondary" size="sm" onclick={() => onreplace(pen)}>
+            <ArrowRightLeft />{m.replace()}
+          </Button>
           <Button
             variant="ghost"
-            size="icon"
-            aria-label={m.clear_pen()}
-            title={m.clear_pen()}
-            onclick={() => editor.replace(pen, null)}><Eraser /></Button
+            size="icon-sm"
+            aria-label={m.remove()}
+            title={m.remove()}
+            onclick={() => editor.replace(pen, null)}
           >
+            <Eraser />
+          </Button>
         </li>
       {/each}
     </ul>
