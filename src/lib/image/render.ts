@@ -8,8 +8,8 @@ export interface Box {
 }
 
 /**
- * The colored page as RGBA pixels: each area's pen color multiplied with the line art, the way
- * marker ink sits under printed lines. Repaints one area at a time.
+ * The colored page as RGBA pixels: each area's pen color multiplied with the page image, the way
+ * marker ink sits on paper and under printed lines. Repaints one area at a time.
  */
 export class Composite {
   readonly image: ImageData;
@@ -19,16 +19,13 @@ export class Composite {
 
   constructor(
     readonly seg: Segmentation,
-    readonly line: Uint8ClampedArray
+    /** The page image, RGBA. */
+    readonly page: Uint8ClampedArray
   ) {
     this.image = new ImageData(seg.width, seg.height);
     this.colors = new Int32Array(seg.count + 1).fill(-1);
     this.boxes = new Array(seg.count + 1).fill(null);
-    const d = this.image.data;
-    for (let i = 0, j = 0; i < line.length; i++, j += 4) {
-      d[j] = d[j + 1] = d[j + 2] = line[i];
-      d[j + 3] = 255;
-    }
+    this.image.data.set(page);
   }
 
   /** Set an area's color (`#rrggbb` or null) and return the box that changed. */
@@ -37,17 +34,15 @@ export class Composite {
     this.colors[region] = c;
     const { offsets, pixels } = this.seg;
     const d = this.image.data;
-    const line = this.line;
+    const page = this.page;
     const r = c >= 0 ? (c >> 16) & 255 : 255;
     const g = c >= 0 ? (c >> 8) & 255 : 255;
     const b = c >= 0 ? c & 255 : 255;
     for (let k = offsets[region]; k < offsets[region + 1]; k++) {
-      const i = pixels[k];
-      const l = line[i];
-      const j = i * 4;
-      d[j] = (r * l) / 255;
-      d[j + 1] = (g * l) / 255;
-      d[j + 2] = (b * l) / 255;
+      const j = pixels[k] * 4;
+      d[j] = (r * page[j]) / 255;
+      d[j + 1] = (g * page[j + 1]) / 255;
+      d[j + 2] = (b * page[j + 2]) / 255;
     }
     return this.box(region);
   }

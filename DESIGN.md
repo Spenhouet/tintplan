@@ -39,8 +39,8 @@ System font stack. `text-caption` (11 px) for swatch codes, `text-xs` for meta t
 
 ### Motion
 
-- The area scan plays once per new page, about 2.5 s, and never blocks taps. It is skipped when the system asks for reduced motion.
-- Sheets slide up on mobile and fade in centered on desktop. No looping animations.
+- The area scan plays in the Check areas step: in full on the first detection, shortened when settings change. The areas stay tinted afterwards. With reduced motion the end state shows right away.
+- Sheets slide up on mobile and fade in centered on desktop, and can be swiped down by their handle or title bar. No looping animations.
 - Screens change with a short slide (View Transitions): deeper screens come in from the right, going up slides back. `+layout.svelte` sets the direction from the screen depth.
 - A ring shows where a tap filled or erased an area. Buttons press in slightly (`active:scale-95`/`98`).
 

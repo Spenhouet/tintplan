@@ -6,7 +6,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/caran-dache-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 100
+    "count": 100,
+    "preview": [
+      "#4c2d2d",
+      "#bf4e45",
+      "#ba5c3f",
+      "#e9c1aa",
+      "#dba057",
+      "#f5a50f",
+      "#b9a35f",
+      "#bbb654",
+      "#8ec39b",
+      "#6cc1be",
+      "#067191",
+      "#06549e",
+      "#642664",
+      "#e0283c"
+    ]
   },
   {
     "id": "caran-dache-museum",
@@ -15,7 +31,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/caran-dache-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 76
+    "count": 76,
+    "preview": [
+      "#b96f6e",
+      "#863f38",
+      "#da8356",
+      "#ed8727",
+      "#967a4e",
+      "#f0c84a",
+      "#f2e76c",
+      "#98b737",
+      "#457450",
+      "#62b4a3",
+      "#2ca8dd",
+      "#0b6cb1",
+      "#c0a0c8",
+      "#b83b51"
+    ]
   },
   {
     "id": "caran-dache-neocolor-ii",
@@ -24,7 +56,23 @@
     "kind": "crayon",
     "source": "github.com/scottgfhong310/caran-dache-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 84
+    "count": 84,
+    "preview": [
+      "#ef8685",
+      "#a23d2e",
+      "#ea5a1c",
+      "#bf733e",
+      "#e7a249",
+      "#ffe688",
+      "#fff27f",
+      "#cedd8b",
+      "#179734",
+      "#14b1ae",
+      "#5aafdc",
+      "#344b75",
+      "#8e80b5",
+      "#ee8296"
+    ]
   },
   {
     "id": "caran-dache-pablo",
@@ -33,7 +81,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/caran-dache-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 120
+    "count": 120,
+    "preview": [
+      "#f79d9b",
+      "#dc6548",
+      "#aa5a33",
+      "#e09b51",
+      "#e8dcc7",
+      "#f3eeba",
+      "#ebe958",
+      "#9ad3b1",
+      "#039f78",
+      "#037f7d",
+      "#1f89c3",
+      "#486ea1",
+      "#774078",
+      "#bc314c"
+    ]
   },
   {
     "id": "caran-dache-supracolor",
@@ -42,7 +106,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/caran-dache-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 120
+    "count": 120,
+    "preview": [
+      "#81443f",
+      "#bf5038",
+      "#fabda6",
+      "#db8b47",
+      "#cd9238",
+      "#f7eeac",
+      "#4a4b2c",
+      "#7bc355",
+      "#0bb378",
+      "#02aec9",
+      "#3585b7",
+      "#305696",
+      "#a867ac",
+      "#d21951"
+    ]
   },
   {
     "id": "copic-ciao",
@@ -51,7 +131,23 @@
     "kind": "marker",
     "source": "github.com/scottgfhong310/copic-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 180
+    "count": 180,
+    "preview": [
+      "#f5b6b3",
+      "#ef8463",
+      "#f8c28d",
+      "#fbc95e",
+      "#ffe746",
+      "#ebeb9e",
+      "#71bb48",
+      "#207f5c",
+      "#00accb",
+      "#a2c8e0",
+      "#2a3f52",
+      "#8d93c8",
+      "#e6adcd",
+      "#f3a9c3"
+    ]
   },
   {
     "id": "copic-classic",
@@ -60,7 +156,23 @@
     "kind": "marker",
     "source": "github.com/scottgfhong310/copic-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 214
+    "count": 214,
+    "preview": [
+      "#f5b6b3",
+      "#ec682c",
+      "#dbb089",
+      "#fbc95e",
+      "#ffeb63",
+      "#d6d057",
+      "#596f00",
+      "#9fcf88",
+      "#00925c",
+      "#bce2e4",
+      "#7fcdec",
+      "#a1c8eb",
+      "#d49bc4",
+      "#f097b8"
+    ]
   },
   {
     "id": "copic-sketch",
@@ -69,7 +181,23 @@
     "kind": "marker",
     "source": "github.com/scottgfhong310/copic-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 358
+    "count": 358,
+    "preview": [
+      "#f5b6b3",
+      "#d3896b",
+      "#dbb089",
+      "#d2c7b3",
+      "#ffe746",
+      "#a09a00",
+      "#a2cb23",
+      "#8ac287",
+      "#b0dcdb",
+      "#00a7e3",
+      "#8fc6ec",
+      "#8d93c8",
+      "#e49ec4",
+      "#f097b8"
+    ]
   },
   {
     "id": "decotime",
@@ -78,7 +206,23 @@
     "kind": "marker",
     "source": "github.com/dferrandizmont/ink-lab",
     "license": "MIT, © 2026 Daniel Mont Ferrandiz",
-    "count": 313
+    "count": 313,
+    "preview": [
+      "#dabcbc",
+      "#f15c2a",
+      "#e39f75",
+      "#c38048",
+      "#eecda0",
+      "#d6d19c",
+      "#c7d9b9",
+      "#2c9b86",
+      "#008193",
+      "#bbcedc",
+      "#6d7ebc",
+      "#bf9eca",
+      "#e0c1cf",
+      "#e01c3f"
+    ]
   },
   {
     "id": "faber-castell-albrecht-durer",
@@ -87,7 +231,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/faber-castell-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 72
+    "count": 72,
+    "preview": [
+      "#f39f9e",
+      "#e7ae97",
+      "#db995d",
+      "#d09a2e",
+      "#ffd518",
+      "#8ea54c",
+      "#00a367",
+      "#78c9dc",
+      "#52ace1",
+      "#94b8e2",
+      "#4b4493",
+      "#dc89b9",
+      "#9a5169",
+      "#d42842"
+    ]
   },
   {
     "id": "faber-castell-black-edition",
@@ -96,7 +256,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/faber-castell-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 100
+    "count": 100,
+    "preview": [
+      "#693736",
+      "#e84922",
+      "#ec672c",
+      "#f4d1b4",
+      "#d2b467",
+      "#d6e6b5",
+      "#71b84e",
+      "#007b54",
+      "#13abde",
+      "#1887c9",
+      "#5b8bc3",
+      "#65509c",
+      "#e280b0",
+      "#9b3259"
+    ]
   },
   {
     "id": "faber-castell-goldfaber",
@@ -105,7 +281,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/faber-castell-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 48
+    "count": 48,
+    "preview": [
+      "#f39f9e",
+      "#f39b96",
+      "#f9c7a6",
+      "#f3bf57",
+      "#ffe52e",
+      "#7ebb4e",
+      "#44b286",
+      "#08675c",
+      "#78c9dc",
+      "#82cff5",
+      "#6e9dd4",
+      "#79539a",
+      "#c63982",
+      "#d42842"
+    ]
   },
   {
     "id": "faber-castell-polychromos",
@@ -114,7 +306,23 @@
     "kind": "pencil",
     "source": "github.com/scottgfhong310/faber-castell-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 120
+    "count": 120,
+    "preview": [
+      "#f39f9e",
+      "#d7704f",
+      "#ef7b28",
+      "#f3bf57",
+      "#ffde38",
+      "#abcf7d",
+      "#00a367",
+      "#00b2bb",
+      "#52ace1",
+      "#6e9dd4",
+      "#79539a",
+      "#c63982",
+      "#da2855",
+      "#e33e56"
+    ]
   },
   {
     "id": "finecolour",
@@ -123,7 +331,23 @@
     "kind": "marker",
     "source": "github.com/scottgfhong310/finecolour-color",
     "license": "MIT, © 2026 Scott G.F. Hong",
-    "count": 480
+    "count": 480,
+    "preview": [
+      "#d35252",
+      "#954830",
+      "#f28b50",
+      "#fbd8b0",
+      "#dac689",
+      "#f7ee25",
+      "#bed59f",
+      "#9fc8ba",
+      "#a1d7e1",
+      "#477489",
+      "#4a62a8",
+      "#d4accf",
+      "#f0bcd3",
+      "#cc4f6f"
+    ]
   },
   {
     "id": "ohuhu-honolulu",
@@ -132,7 +356,23 @@
     "kind": "marker",
     "source": "github.com/dferrandizmont/ink-lab",
     "license": "MIT, © 2026 Daniel Mont Ferrandiz",
-    "count": 367
+    "count": 367,
+    "preview": [
+      "#ff6565",
+      "#f9af9c",
+      "#953b0f",
+      "#f2c39d",
+      "#facc94",
+      "#fde16d",
+      "#dee4cb",
+      "#7cb79d",
+      "#b1dee2",
+      "#457393",
+      "#59739b",
+      "#988dc4",
+      "#ff91cd",
+      "#e690ab"
+    ]
   },
   {
     "id": "ohuhu-kaala",
@@ -141,7 +381,23 @@
     "kind": "marker",
     "source": "github.com/dferrandizmont/ink-lab",
     "license": "MIT, © 2026 Daniel Mont Ferrandiz",
-    "count": 200
+    "count": 200,
+    "preview": [
+      "#ff6565",
+      "#f69476",
+      "#9a6f5a",
+      "#ffaf71",
+      "#c68e54",
+      "#f0af42",
+      "#d9dc93",
+      "#13904d",
+      "#37bebd",
+      "#a4d4e7",
+      "#80aaff",
+      "#c1b0d3",
+      "#bd6e9c",
+      "#bb667c"
+    ]
   },
   {
     "id": "ohuhu-oahu",
@@ -150,6 +406,22 @@
     "kind": "marker",
     "source": "github.com/dferrandizmont/ink-lab",
     "license": "MIT, © 2026 Daniel Mont Ferrandiz",
-    "count": 321
+    "count": 321,
+    "preview": [
+      "#ff6565",
+      "#ab7a6c",
+      "#ed8e5c",
+      "#ff8a28",
+      "#bd9057",
+      "#e1d791",
+      "#91bb76",
+      "#408982",
+      "#4d88a9",
+      "#77a6d9",
+      "#a7acd7",
+      "#d0a7ce",
+      "#d189ae",
+      "#e690ab"
+    ]
   }
 ]

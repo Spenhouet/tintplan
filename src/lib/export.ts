@@ -13,7 +13,8 @@ export interface LegendItem {
 
 /** What an exported PNG carries so it can be opened again for editing. */
 interface Embedded {
-  v: 1;
+  /** 1: attachment is the grayscale line art. 2: attachment is the page image followed by the outline PNG. */
+  v: 1 | 2;
   name: string;
   width: number;
   height: number;
@@ -21,6 +22,10 @@ interface Embedded {
   paletteId: string;
   setId?: string;
   fills: Fill[];
+  minArea?: number;
+  /** v2: byte length and type of the page image at the start of the attachment. */
+  imageBytes?: number;
+  imageType?: string;
 }
 
 /** Render the colored page, optionally with codes and a legend of the pens used, as PNG bytes. */
@@ -80,18 +85,25 @@ export async function renderPng(
 
 /** Attach the editable project to exported PNG bytes. */
 export async function embedProject(png: Uint8Array, project: Project): Promise<Uint8Array<ArrayBuffer>> {
+  const image = new Uint8Array(await project.line.arrayBuffer());
+  const outline = project.outline ? new Uint8Array(await project.outline.arrayBuffer()) : new Uint8Array(0);
   const meta: Embedded = {
-    v: 1,
+    v: 2,
     name: project.name,
     width: project.width,
     height: project.height,
     gap: project.gap,
+    minArea: project.minArea ?? 0,
     paletteId: project.paletteId,
     setId: project.setId,
-    fills: project.fills
+    fills: project.fills,
+    imageBytes: image.length,
+    imageType: project.line.type || 'image/png'
   };
-  const line = new Uint8Array(await project.line.arrayBuffer());
-  return addChunk(png, CHUNK, pack(meta, line));
+  const attachment = new Uint8Array(image.length + outline.length);
+  attachment.set(image);
+  attachment.set(outline, image.length);
+  return addChunk(png, CHUNK, pack(meta, attachment));
 }
 
 /** If `file` is a PNG exported by Tintplan, restore it as a new project and return its id. */
@@ -100,9 +112,12 @@ export async function importEmbedded(file: Blob): Promise<string | null> {
   const chunk = readChunk(bytes, CHUNK);
   if (!chunk) return null;
   const { json, attachment } = unpack<Embedded>(chunk);
-  if (json.v !== 1) return null;
+  if (json.v !== 1 && json.v !== 2) return null;
   const now = Date.now();
   const id = newId();
+  const split = json.v === 2 ? (json.imageBytes ?? attachment.length) : attachment.length;
+  const image = attachment.slice(0, split);
+  const outline = attachment.slice(split);
   await db.projects.add({
     id,
     name: json.name,
@@ -111,7 +126,9 @@ export async function importEmbedded(file: Blob): Promise<string | null> {
     width: json.width,
     height: json.height,
     gap: json.gap,
-    line: new Blob([attachment as BlobPart], { type: 'image/png' }),
+    minArea: json.minArea ?? 0,
+    line: new Blob([image as BlobPart], { type: json.imageType ?? 'image/png' }),
+    outline: outline.length ? new Blob([outline as BlobPart], { type: 'image/png' }) : undefined,
     fills: json.fills,
     paletteId: json.paletteId,
     setId: json.setId

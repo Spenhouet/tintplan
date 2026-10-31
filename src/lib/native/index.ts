@@ -12,6 +12,29 @@ export async function haptic(kind: 'light' | 'medium' = 'light') {
   }
 }
 
+/**
+ * Take a photo with the camera app. The web file input can't force the camera inside the Android
+ * WebView (it opens the gallery), so the app uses the camera plugin. Null when cancelled.
+ */
+export async function takePhoto(): Promise<File | null> {
+  const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+  try {
+    const photo = await Camera.getPhoto({
+      source: CameraSource.Camera,
+      resultType: CameraResultType.Uri,
+      quality: 92,
+      correctOrientation: true,
+      saveToGallery: false
+    });
+    if (!photo.webPath) return null;
+    const blob = await (await fetch(photo.webPath)).blob();
+    return new File([blob], `photo.${photo.format || 'jpg'}`, { type: blob.type || 'image/jpeg' });
+  } catch (e) {
+    if (/cancel/i.test((e as Error).message)) return null;
+    throw e;
+  }
+}
+
 function toBase64(bytes: Uint8Array): string {
   let binary = '';
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));

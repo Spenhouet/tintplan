@@ -7,14 +7,24 @@
    * passes lights up in its own color with a glowing halo along its outline, then fades away.
    * Runs on the GPU; without WebGL or with reduced motion it ends right away.
    */
-  let { map, onend }: { map: ScanMap; onend: () => void } = $props();
+  let {
+    map,
+    hold = false,
+    sweep = 1.2,
+    onend
+  }: {
+    map: ScanMap;
+    /** Keep the areas tinted after the sweep instead of fading out. */
+    hold?: boolean;
+    /** Seconds for the light to cross the page. */
+    sweep?: number;
+    onend?: () => void;
+  } = $props();
 
   let canvas = $state<HTMLCanvasElement>();
 
   /** Seconds: start delay, sweep from top to bottom, then hold and fade. */
   const DELAY = 0.15;
-  const SWEEP = 1.2;
-  const END = DELAY + SWEEP + 1.1;
 
   const VERTEX = `
     attribute vec2 a_pos;
@@ -24,10 +34,12 @@
       gl_Position = vec4(a_pos, 0.0, 1.0);
     }`;
 
-  const FRAGMENT = `
+  /** Fragment shader for a sweep of `SWEEP` seconds that ends (or settles) at `END`. */
+  const fragment = (SWEEP: number, END: number) => `
     precision mediump float;
     uniform sampler2D u_map;
     uniform float u_t;
+    uniform float u_hold;
     varying vec2 v_uv;
 
     vec3 hue(float h) {
@@ -37,12 +49,12 @@
 
     void main() {
       vec4 m = texture2D(u_map, v_uv);
-      float fade = 1.0 - smoothstep(${(END - 0.55).toFixed(2)}, ${END.toFixed(2)}, u_t);
+      float fade = u_hold > 0.5 ? 1.0 : 1.0 - smoothstep(${(END - 0.55).toFixed(2)}, ${END.toFixed(2)}, u_t);
       float sweepPos = (u_t - ${DELAY.toFixed(2)}) / ${SWEEP.toFixed(2)};
 
       // The scan line: a soft violet band with a bright core
       float band = abs(v_uv.y - sweepPos);
-      float sweep = (exp(-band * 260.0) * 0.85 + exp(-band * 30.0) * 0.16)
+      float band_ = (exp(-band * 260.0) * 0.85 + exp(-band * 30.0) * 0.16)
         * step(0.0, sweepPos) * (1.0 - smoothstep(0.92, 1.05, sweepPos));
       vec3 sweepColor = vec3(0.55, 0.36, 0.96);
 
@@ -52,20 +64,22 @@
       float lit = smoothstep(0.0, 0.1, ageP) * step(0.004, m.a);
       float pulse = exp(-pow((ageR - 0.1) / 0.16, 2.0));
       float d = m.g * 255.0;
-      float tint = lit * m.a * (0.08 + 0.3 * pulse);
+      float tint = lit * m.a * (mix(0.08, 0.3, u_hold) + 0.3 * pulse);
       float halo = lit * (exp(-d / 3.5) * (0.7 + 0.3 * pulse) + exp(-d / 14.0) * 0.3 * pulse);
       vec3 c = hue(m.b);
 
       float a = clamp(tint + halo, 0.0, 0.95) * fade;
-      vec3 rgb = c * a + mix(sweepColor, vec3(1.0), exp(-band * 600.0) * 0.6) * sweep * fade;
-      gl_FragColor = vec4(rgb, clamp(a + sweep * fade, 0.0, 1.0));
+      vec3 rgb = c * a + mix(sweepColor, vec3(1.0), exp(-band * 600.0) * 0.6) * band_ * fade;
+      gl_FragColor = vec4(rgb, clamp(a + band_ * fade, 0.0, 1.0));
     }`;
 
   onMount(() => {
+    const SWEEP = sweep;
+    const END = DELAY + SWEEP + 1.1;
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const gl = canvas?.getContext('webgl', { premultipliedAlpha: true, alpha: true });
-    if (reduce || !gl || !canvas) {
-      onend();
+    if (!gl || !canvas || (reduce && !hold)) {
+      onend?.();
       return;
     }
     canvas.width = map.width;
@@ -79,10 +93,10 @@
     };
     const program = gl.createProgram()!;
     gl.attachShader(program, shader(gl.VERTEX_SHADER, VERTEX));
-    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, FRAGMENT));
+    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, fragment(SWEEP, END)));
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      onend();
+      onend?.();
       return;
     }
     gl.useProgram(program);
@@ -101,18 +115,20 @@
     for (const p of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, p, gl.NEAREST);
     for (const p of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, p, gl.CLAMP_TO_EDGE);
     const uT = gl.getUniformLocation(program, 'u_t');
+    gl.uniform1f(gl.getUniformLocation(program, 'u_hold'), hold ? 1 : 0);
 
     gl.viewport(0, 0, map.width, map.height);
     let start = 0;
     let frame = requestAnimationFrame(function draw(now) {
       start ||= now;
-      const t = (now - start) / 1000;
+      // With reduced motion, show the end state right away
+      const t = reduce ? END : (now - start) / 1000;
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform1f(uT, t);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       if (t < END) frame = requestAnimationFrame(draw);
-      else onend();
+      else onend?.();
     });
 
     return () => {

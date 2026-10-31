@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Gray } from './gray';
-import { otsu } from './gray';
+import { maxFilter, otsu } from './gray';
 import { connectedComponents } from './labels';
 import { segment } from './segment';
-import { detectPage, enhance } from './enhance';
+import { detectPage } from './enhance';
+import { extractLines, morph } from './lines';
 import { fullQuad, warp, warpSize } from './warp';
 import { addChunk, crc32, pack, readChunk, unpack } from './png';
 import { layoutLabel } from './label';
@@ -92,30 +93,80 @@ describe('segment', () => {
   });
 });
 
-describe('enhance', () => {
+/** RGBA version of a gray page, with each area's interior painted by `paint(x, y)`. */
+function rgba(g: Gray, paint?: (x: number, y: number) => [number, number, number] | null): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(g.width * g.height * 4);
+  for (let y = 0; y < g.height; y++) {
+    for (let x = 0; x < g.width; x++) {
+      const i = y * g.width + x;
+      const v = g.data[i];
+      const c = v > 128 && paint ? paint(x, y) : null;
+      out.set(c ? [...c, 255] : [v, v, v, 255], i * 4);
+    }
+  }
+  return out;
+}
+
+describe('extractLines', () => {
+  const opts = { strength: 0.55, speck: 0 };
+
   it('removes a shadow gradient and keeps lines', () => {
     const g = twoBoxes();
-    // Paper darkens from 230 to 120 left to right, lines are 35% of the paper
-    for (let y = 0; y < 100; y++) {
-      for (let x = 0; x < 100; x++) {
-        const paper = 230 - x * 1.1;
-        const i = y * 100 + x;
-        g.data[i] = g.data[i] === 0 ? paper * 0.35 : paper;
-      }
-    }
-    const out = enhance(g, { strength: 0.5, speck: 0 });
+    const img = rgba(g, (x) => {
+      const p = 230 - x * 1.1;
+      return [p, p * 0.95, p * 0.85];
+    });
+    for (let y = 0; y < 100; y++)
+      for (let x = 0; x < 100; x++) if (g.data[y * 100 + x] === 0) img.set([40, 38, 35], (y * 100 + x) * 4);
+    const out = extractLines(img, 100, 100, opts);
     expect(out.data[50 * 100 + 30]).toBe(255);
     expect(out.data[50 * 100 + 80]).toBe(255);
     expect(out.data[50 * 100 + 50]).toBeLessThan(40);
-    expect(out.data[50 * 100 + 88]).toBeLessThan(40);
   });
 
-  it('removes specks', () => {
-    const g = twoBoxes();
-    rect(g, 30, 30, 32, 32, 0);
-    const out = enhance(g, { strength: 0.5, speck: 10 });
-    expect(out.data[30 * 100 + 30]).toBe(255);
+  it('ignores saturated and dark colored fills', () => {
+    // Left box dark blue, right box deep red: both are fills, not lines
+    const img = rgba(twoBoxes(), (x) => (x < 50 ? [20, 30, 140] : [150, 20, 25]));
+    const out = extractLines(img, 100, 100, opts);
+    expect(out.data[50 * 100 + 30]).toBe(255);
+    expect(out.data[50 * 100 + 70]).toBe(255);
     expect(out.data[50 * 100 + 50]).toBeLessThan(40);
+    const s = segment(out, 1);
+    expect(s.labels[50 * 100 + 30]).not.toBe(s.labels[50 * 100 + 70]);
+  });
+
+  it('ignores gray shading inside an area', () => {
+    // Graphite-like gradient from white to mid gray across the left box
+    const img = rgba(twoBoxes(), (x) => {
+      if (x >= 50) return null;
+      const v = 250 - (x - 13) * 3.5;
+      return [v, v, v];
+    });
+    const out = extractLines(img, 100, 100, opts);
+    for (const x of [16, 25, 35, 45]) expect(out.data[50 * 100 + x]).toBeGreaterThan(200);
+    const s = segment(out, 1);
+    expect(s.labels[50 * 100 + 16]).toBe(s.labels[50 * 100 + 45]);
+  });
+});
+
+describe('morph', () => {
+  it('matches a naive max and min filter', () => {
+    const g = canvas(37, 23);
+    for (let i = 0; i < g.data.length; i++) g.data[i] = (i * 7919) % 251;
+    for (const r of [1, 2, 5]) {
+      const fast = morph(g, r, true);
+      const naive = maxFilter(g, r);
+      expect(fast.data).toEqual(naive.data);
+      const min = morph(g, r, false);
+      for (let y = 0; y < g.height; y++)
+        for (let x = 0; x < g.width; x++) {
+          let m = 255;
+          for (let yy = Math.max(0, y - r); yy <= Math.min(g.height - 1, y + r); yy++)
+            for (let xx = Math.max(0, x - r); xx <= Math.min(g.width - 1, x + r); xx++)
+              m = Math.min(m, g.data[yy * g.width + xx]);
+          expect(min.data[y * g.width + x]).toBe(m);
+        }
+    }
   });
 });
 

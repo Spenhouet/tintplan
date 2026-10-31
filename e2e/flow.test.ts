@@ -13,15 +13,18 @@ test('photo to colored page, export and reimport', async ({ page }, testInfo) =>
 
   await expect(page.getByText('Crop the page')).toBeVisible();
   await page.getByRole('button', { name: 'Next' }).click();
+  // The areas step scans the page and keeps the detected areas tinted
+  await expect(page.getByText('Check areas')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start coloring' })).toBeEnabled({ timeout: 15_000 });
+  await expect(page.getByText(/\d+ areas/)).toBeVisible();
+  await expect(page.locator('canvas[aria-hidden="true"]')).toBeAttached();
+  await page.getByRole('radio', { name: 'Original' }).click();
+  await expect(page.getByRole('button', { name: 'Start coloring' })).toBeEnabled();
+  await page.getByRole('radio', { name: 'Lines' }).click();
   await page.getByRole('button', { name: 'Start coloring' }).click();
   await expect(page).toHaveURL(/edit\?id=/);
   const canvas = page.locator('canvas').first();
   await expect(canvas).toBeVisible({ timeout: 15_000 });
-  // The area scan plays once, then removes itself
-  const scan = page.locator('canvas[aria-hidden="true"]');
-  await expect(scan).toBeAttached();
-  await expect(scan).toHaveCount(0, { timeout: 10_000 });
 
   await page.getByRole('button', { name: 'Choose a pen' }).first().click();
   await page.getByPlaceholder('Code, name or hex').fill('Y13');
@@ -40,6 +43,18 @@ test('photo to colored page, export and reimport', async ({ page }, testInfo) =>
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator('svg text', { hasText: 'Y13' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Redo' }).click();
+  await expect(page.locator('svg text', { hasText: 'Y13' })).toBeVisible();
+
+  // Replace a pen everywhere from the pens used list, then undo it
+  await page.getByRole('button', { name: 'Pens used' }).click();
+  await page.getByRole('button', { name: 'Replace' }).click();
+  await expect(page.getByText('Replace Y13 with')).toBeVisible();
+  await page.getByPlaceholder('Code, name or hex').fill('R81');
+  await page.getByRole('button', { name: 'R81', exact: true }).first().click();
+  await expect(page.locator('svg text', { hasText: 'R81' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  // Undo from the toast
+  await page.locator('[data-button]', { hasText: 'Undo' }).click();
   await expect(page.locator('svg text', { hasText: 'Y13' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Export' }).click();

@@ -16,17 +16,18 @@ Offline coloring planner. Photograph a coloring page, clean up the lines, tap ar
 ## Layout
 
 - `src/lib/image/`: pure image code, no DOM except `render.ts`.
-  - `gray.ts` gray images and filters, `warp.ts` perspective straightening, `enhance.ts` line cleanup and page detection.
+  - `gray.ts` gray images and filters, `warp.ts` perspective straightening (gray and RGBA), `enhance.ts` page detection.
+  - `lines.ts` outline extraction that works on colored and shaded pages: max channel, flattened light, black top-hat (closing minus image) for thin dark lines, absolute darkness, hysteresis for faint outline pieces. `morph` is an O(1) max/min filter.
   - `segment.ts` splits line art into areas: labels on a copy with thickened lines (gap closing), narrow strips added back, then grown under the lines. Also finds each area's label spot (furthest from the outline, near the center of mass), a per-area pixel list, and the half-resolution `scan` texture for the scan animation (`ScanOverlay.svelte`, a WebGL shader).
   - `label.ts` fits a code into an area's inscribed circle. `render.ts` composites fills under the lines (multiply) and draws labels on canvas.
   - `png.ts` writes and reads the private `tpLn` chunk that makes exported PNGs editable.
   - `worker.ts` runs decode, cleanup and segmentation off the main thread; `protocol.ts` is the typed RPC.
 - `src/lib/editor.svelte.ts`: an open page. Fills per area, undo/redo, labels, legend, debounced saving with a thumbnail.
-- `src/lib/db/`: Dexie schema. Fills are stored as a point inside the area, not as an area number, so they survive changes to the segmentation.
+- `src/lib/db/`: Dexie schema. A page stores the image shown while coloring (`line`: lines, gray or original) and the outlines the areas come from (`outline`). Fills are stored as a point inside the area, not as an area number, so they survive changes to the segmentation.
 - `src/lib/pens/`: palette index and lazily loaded palette JSON.
 - `src/lib/export.ts`: PNG rendering with codes and legend, embedding and importing projects, file saving.
 - `src/lib/native/`: Capacitor bridge (back button, haptics, share sheet). Everything else is the same web code.
-- `src/routes/`: library (`/`), photo preparation (`/new`), editor (`/edit?id=`), `/settings`.
+- `src/routes/`: library (`/`), photo preparation (`/new`: crop, then check areas with live re-detection), editor (`/edit?id=`), `/settings`.
 - `messages/{en,de}.json`: every UI string. Add both languages for each new key.
 
 ## Design
@@ -45,3 +46,7 @@ The release keystore is backed up outside the repo; its secrets are `ANDROID_KEY
 - The cleaned line art is the source of truth for a page; areas are recomputed from it on open.
 - Pen colors are approximations. Say so wherever colors are presented as matching real pens.
 - Components in `src/lib/components/ui/` come from shadcn-svelte. bits-ui sets `data-state`, so use `data-[state=open]:` style variants, not `data-open:`.
+
+## Tuning the area detection
+
+Detection parameters were tuned on coloring pages that come with a colored version of the same drawing: the clean half gives the true areas, the colored half (and a simulated phone photo of both) must reproduce them. When changing `lines.ts` or `segment.ts`, rerun such a comparison and check that no page gets worse.

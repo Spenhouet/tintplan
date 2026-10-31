@@ -9,6 +9,8 @@ import { join } from 'node:path';
 const root = join(import.meta.dirname, '..');
 const res = join(root, 'android/app/src/main/res');
 const VIOLET = '#7c3aed';
+/** The tile gradient, defined in favicon.svg. */
+const TILE = 'url(#bg)';
 const svg = readFileSync(join(root, 'static/favicon.svg'), 'utf8');
 // The artwork without the rounded violet tile
 const art = svg
@@ -32,15 +34,15 @@ const densities = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 } as con
 for (const [name, f] of Object.entries(densities)) {
   const dir = join(res, `mipmap-${name}`);
   // Adaptive foreground: 108 dp canvas, the art inside the 66 dp safe zone
-  await sharp(compose(0.95), { density: 300 })
+  await sharp(compose(0.72), { density: 300 })
     .resize(Math.round(108 * f))
     .png()
     .toFile(join(dir, 'ic_launcher_foreground.png'));
-  await sharp(compose(1, VIOLET), { density: 300 })
+  await sharp(compose(1, TILE), { density: 300 })
     .resize(Math.round(48 * f))
     .png()
     .toFile(join(dir, 'ic_launcher.png'));
-  await sharp(compose(0.85, VIOLET, true), { density: 300 })
+  await sharp(compose(0.82, TILE, true), { density: 300 })
     .resize(Math.round(48 * f))
     .png()
     .toFile(join(dir, 'ic_launcher_round.png'));
@@ -52,7 +54,7 @@ for (const dir of readdirSync(res).filter((d) => d.startsWith('drawable'))) {
   if (!existsSync(file)) continue;
   const { width = 480, height = 800 } = await sharp(file).metadata();
   const size = Math.round(Math.min(width, height) * 0.4);
-  const icon = await sharp(compose(1), { density: 300 }).resize(size).png().toBuffer();
+  const icon = await sharp(compose(0.9), { density: 300 }).resize(size).png().toBuffer();
   await sharp({ create: { width, height, channels: 4, background: VIOLET } })
     .composite([{ input: icon, gravity: 'center' }])
     .png()

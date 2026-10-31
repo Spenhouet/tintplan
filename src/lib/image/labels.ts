@@ -81,47 +81,61 @@ export function distanceInsideRegions(labels: Int32Array, width: number, height:
 /**
  * Two-pass 3-4 chamfer transform in place. With `labels`, a neighbor only propagates its distance
  * if it carries the same label; a neighbor with another label (or outside the image) counts as
- * distance 0.
+ * distance 0. Written out by hand: this runs several times per page on millions of pixels.
  */
 function chamfer(d: Float32Array, w: number, h: number, labels: Int32Array | null) {
-  const step = (i: number, x: number, y: number, dx: number, dy: number, cost: number) => {
-    const nx = x + dx;
-    const ny = y + dy;
-    let base: number;
-    if (nx < 0 || ny < 0 || nx >= w || ny >= h) {
-      if (!labels) return;
-      base = 0;
-    } else {
-      const j = ny * w + nx;
-      base = labels && labels[j] !== labels[i] ? 0 : d[j];
-    }
-    if (base + cost < d[i]) d[i] = base + cost;
-  };
+  const edge = labels ? 0 : Infinity;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (d[i] === 0) continue;
-      step(i, x, y, -1, 0, 3);
-      step(i, x, y, -1, -1, 4);
-      step(i, x, y, 0, -1, 3);
-      step(i, x, y, 1, -1, 4);
+      let v = d[i];
+      if (v === 0) continue;
+      const l = labels ? labels[i] : 0;
+      let b: number;
+      b = x > 0 ? (labels && labels[i - 1] !== l ? 0 : d[i - 1]) : edge;
+      if (b + 3 < v) v = b + 3;
+      if (y > 0) {
+        const up = i - w;
+        b = labels && labels[up] !== l ? 0 : d[up];
+        if (b + 3 < v) v = b + 3;
+        b = x > 0 ? (labels && labels[up - 1] !== l ? 0 : d[up - 1]) : edge;
+        if (b + 4 < v) v = b + 4;
+        b = x < w - 1 ? (labels && labels[up + 1] !== l ? 0 : d[up + 1]) : edge;
+        if (b + 4 < v) v = b + 4;
+      } else if (edge === 0 && 3 < v) {
+        v = 3;
+      }
+      d[i] = v;
     }
   }
   for (let y = h - 1; y >= 0; y--) {
     for (let x = w - 1; x >= 0; x--) {
       const i = y * w + x;
-      if (d[i] === 0) continue;
-      step(i, x, y, 1, 0, 3);
-      step(i, x, y, 1, 1, 4);
-      step(i, x, y, 0, 1, 3);
-      step(i, x, y, -1, 1, 4);
+      let v = d[i];
+      if (v === 0) continue;
+      const l = labels ? labels[i] : 0;
+      let b: number;
+      b = x < w - 1 ? (labels && labels[i + 1] !== l ? 0 : d[i + 1]) : edge;
+      if (b + 3 < v) v = b + 3;
+      if (y < h - 1) {
+        const dn = i + w;
+        b = labels && labels[dn] !== l ? 0 : d[dn];
+        if (b + 3 < v) v = b + 3;
+        b = x < w - 1 ? (labels && labels[dn + 1] !== l ? 0 : d[dn + 1]) : edge;
+        if (b + 4 < v) v = b + 4;
+        b = x > 0 ? (labels && labels[dn - 1] !== l ? 0 : d[dn - 1]) : edge;
+        if (b + 4 < v) v = b + 4;
+      } else if (edge === 0 && 3 < v) {
+        v = 3;
+      }
+      d[i] = v;
     }
   }
 }
 
 /**
  * Spread labels into unlabeled pixels (label 0) by breadth-first search, so every pixel ends up
- * with the label of the nearest labeled pixel.
+ * with the label of the nearest labeled pixel. Pixels marked -1 are walls and stay as they are.
  */
 export function growLabels(labels: Int32Array, width: number, height: number): void {
   const n = width * height;
@@ -129,7 +143,7 @@ export function growLabels(labels: Int32Array, width: number, height: number): v
   let next = new Int32Array(n);
   let len = 0;
   for (let i = 0; i < n; i++) {
-    if (!labels[i]) continue;
+    if (labels[i] <= 0) continue;
     const x = i % width;
     if (
       (x > 0 && !labels[i - 1]) ||

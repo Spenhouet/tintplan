@@ -47,7 +47,7 @@ export interface ScanMap {
  * with lines thickened by `gap`, then grown back up to the real lines. White pieces that the
  * thickening swallowed completely (narrow strips) become areas of their own.
  */
-export function segment(line: Gray, gap: number): Segmentation {
+export function segment(line: Gray, gap: number, minArea = 0): Segmentation {
   const { width, height } = line;
   const n = width * height;
   const isLine = new Uint8Array(n);
@@ -79,8 +79,19 @@ export function segment(line: Gray, gap: number): Segmentation {
   // Grow into the white border pixels first, so areas meet at the lines, then under the lines
   const whiteOnly = new Int32Array(n);
   for (let i = 0; i < n; i++) whiteOnly[i] = isLine[i] ? -1 : labels[i];
-  growWithin(whiteOnly, width, height);
+  growLabels(whiteOnly, width, height);
   for (let i = 0; i < n; i++) labels[i] = whiteOnly[i] > 0 ? whiteOnly[i] : 0;
+
+  // Specks of paper smaller than `minArea` (texture, shading leftovers) join their neighbors
+  if (minArea > 0) {
+    const areas = new Int32Array(count + 1);
+    for (let i = 0; i < n; i++) areas[labels[i]]++;
+    const remap = new Int32Array(count + 1);
+    let kept = 0;
+    for (let l = 1; l <= count; l++) if (areas[l] >= minArea) remap[l] = ++kept;
+    for (let i = 0; i < n; i++) labels[i] = remap[labels[i]];
+    count = kept;
+  }
   const inside = labels.slice();
   growLabels(labels, width, height);
 
@@ -136,48 +147,6 @@ export function segment(line: Gray, gap: number): Segmentation {
     pixels,
     scan: scanMap(labels, dist, regions, width, height)
   };
-}
-
-/** Like growLabels, but pixels marked -1 are walls that are never filled. */
-function growWithin(labels: Int32Array, width: number, height: number) {
-  const n = width * height;
-  let queue: number[] = [];
-  for (let i = 0; i < n; i++) {
-    if (labels[i] <= 0) continue;
-    const x = i % width;
-    if (
-      (x > 0 && labels[i - 1] === 0) ||
-      (x < width - 1 && labels[i + 1] === 0) ||
-      (i >= width && labels[i - width] === 0) ||
-      (i < n - width && labels[i + width] === 0)
-    ) {
-      queue.push(i);
-    }
-  }
-  while (queue.length) {
-    const next: number[] = [];
-    for (const i of queue) {
-      const l = labels[i];
-      const x = i % width;
-      if (x > 0 && labels[i - 1] === 0) {
-        labels[i - 1] = l;
-        next.push(i - 1);
-      }
-      if (x < width - 1 && labels[i + 1] === 0) {
-        labels[i + 1] = l;
-        next.push(i + 1);
-      }
-      if (i >= width && labels[i - width] === 0) {
-        labels[i - width] = l;
-        next.push(i - width);
-      }
-      if (i < n - width && labels[i + width] === 0) {
-        labels[i + width] = l;
-        next.push(i + width);
-      }
-    }
-    queue = next;
-  }
 }
 
 function scanMap(labels: Int32Array, dist: Float32Array, regions: Region[], width: number, height: number): ScanMap {

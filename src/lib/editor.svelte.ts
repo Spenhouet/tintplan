@@ -39,10 +39,10 @@ export class Editor {
   private undoStack = $state.raw<Change[][]>([]);
   private redoStack = $state.raw<Change[][]>([]);
 
-  private constructor(project: Project, seg: Segmentation, line: Uint8ClampedArray) {
+  private constructor(project: Project, seg: Segmentation, page: Uint8ClampedArray) {
     this.project = project;
     this.seg = seg;
-    this.composite = new Composite(seg, line);
+    this.composite = new Composite(seg, page);
     this.fills = new Array(seg.count + 1).fill(null);
     this.name = project.name;
     this.paletteId = project.paletteId;
@@ -61,8 +61,14 @@ export class Editor {
   static async open(id: string): Promise<Editor | null> {
     const project = await db.projects.get(id);
     if (!project) return null;
-    const { seg, line } = await run({ type: 'segment', blob: project.line, gap: project.gap });
-    return new Editor(project, seg, line);
+    const { seg, display } = await run({
+      type: 'open',
+      display: project.line,
+      outline: project.outline ?? null,
+      gap: project.gap,
+      minArea: project.minArea ?? 0
+    });
+    return new Editor(project, seg, display);
   }
 
   get width() {
