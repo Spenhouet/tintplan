@@ -20,6 +20,8 @@ export interface PaletteInfo {
   name: string;
   kind: 'marker' | 'pencil' | 'crayon' | 'custom';
   count: number;
+  /** A few colors across the range, sorted by hue, for previews. */
+  preview: string[];
   source: string;
   license: string;
 }

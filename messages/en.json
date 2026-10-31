@@ -94,5 +94,9 @@
   "prepare_cleanup_on_hint": "Removes shadows and makes lines black.",
   "prepare_cleanup_off_hint": "For scans and earlier exports.",
   "prepare_strength_faint": "Fine",
-  "prepare_strength_bold": "Bold"
+  "prepare_strength_bold": "Bold",
+  "kind_marker": "Markers",
+  "kind_pencil": "Colored pencils",
+  "kind_crayon": "Wax pastels",
+  "change": "Change"
 }

@@ -36,18 +36,38 @@ const loadJson = (file: string): Raw => JSON.parse(readFileSync(join(dir, file),
 const hex = (h: string) => '#' + h.replace('#', '').toLowerCase();
 const titleCase = (s: string) => s.replace(/(^|\s)\p{Ll}/gu, (c) => c.toUpperCase());
 
+/** Up to 14 saturated colors evenly spread over the hue circle. */
+function preview(pens: Pen[], n = 14): string[] {
+  const hsl = pens.map((p) => {
+    const v = parseInt(p.hex.slice(1), 16);
+    const [r, g, b] = [(v >> 16) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const d = max - min;
+    let h = 0;
+    if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    const l = (max + min) / 2;
+    const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+    return { hex: p.hex, h: (h * 60 + 360) % 360, s, l };
+  });
+  const vivid = hsl.filter((c) => c.s > 0.25 && c.l > 0.2 && c.l < 0.85).sort((a, b) => a.h - b.h);
+  const pool = vivid.length >= n ? vivid : hsl.sort((a, b) => a.h - b.h);
+  return Array.from({ length: Math.min(n, pool.length) }, (_, i) => pool[Math.floor((i * pool.length) / n)].hex);
+}
+
 const SCOTT = 'MIT, © 2026 Scott G.F. Hong';
 const INKLAB = 'MIT, © 2026 Daniel Mont Ferrandiz';
 const index: PaletteInfo[] = [];
 
-function emit(info: Omit<PaletteInfo, 'count'>, pens: Pen[], sets: PenSet[] = []) {
+function emit(info: Omit<PaletteInfo, 'count' | 'preview'>, pens: Pen[], sets: PenSet[] = []) {
   const seen = new Set<string>();
   pens = pens.filter((p) => !seen.has(p.code) && seen.add(p.code));
   // Only keep sets whose colors are all in this palette
   sets = sets.filter((s) => s.codes.length > 0 && s.codes.every((c) => seen.has(c)));
-  const palette: Palette = { ...info, count: pens.length, pens, sets };
+  const meta = { ...info, count: pens.length, preview: preview(pens) };
+  const palette: Palette = { ...meta, pens, sets };
   writeFileSync(join(out, `${info.id}.json`), JSON.stringify(palette));
-  index.push({ ...info, count: pens.length });
+  index.push(meta);
   console.log(`${info.id}: ${pens.length} pens, ${sets.length} sets`);
 }
 

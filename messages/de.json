@@ -94,5 +94,9 @@
   "prepare_cleanup_on_hint": "Entfernt Schatten und macht Linien schwarz.",
   "prepare_cleanup_off_hint": "Für Scans und frühere Exporte.",
   "prepare_strength_faint": "Fein",
-  "prepare_strength_bold": "Kräftig"
+  "prepare_strength_bold": "Kräftig",
+  "kind_marker": "Marker",
+  "kind_pencil": "Buntstifte",
+  "kind_crayon": "Wachspastelle",
+  "change": "Ändern"
 }

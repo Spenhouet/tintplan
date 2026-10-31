@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Dialog as DialogPrimitive } from 'bits-ui';
-  import { X } from '@lucide/svelte';
+  import { ChevronLeft, X } from '@lucide/svelte';
   import type { Snippet } from 'svelte';
 
   let {
@@ -8,8 +8,17 @@
     title,
     header,
     footer,
+    onback,
     children
-  }: { open: boolean; title: string; header?: Snippet; footer?: Snippet; children: Snippet } = $props();
+  }: {
+    open: boolean;
+    title: string;
+    header?: Snippet;
+    footer?: Snippet;
+    /** Shows a back arrow before the title, for sheets with a sub-view. */
+    onback?: () => void;
+    children: Snippet;
+  } = $props();
 </script>
 
 <DialogPrimitive.Root bind:open>
@@ -22,6 +31,16 @@
     >
       <div class="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted sm:hidden"></div>
       <div class="flex items-center gap-2 px-5 pt-3 pb-2">
+        {#if onback}
+          <button
+            type="button"
+            class="-ml-2 flex size-9 items-center justify-center rounded-full hover:bg-muted"
+            aria-label="Back"
+            onclick={onback}
+          >
+            <ChevronLeft class="size-5" />
+          </button>
+        {/if}
         <DialogPrimitive.Title class="flex-1 truncate text-lg font-semibold">{title}</DialogPrimitive.Title>
         {@render header?.()}
         <DialogPrimitive.Close
