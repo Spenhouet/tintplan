@@ -28,7 +28,9 @@ export interface Project {
   /** Paper specks smaller than this many pixels join their neighbors. 0 on older pages. */
   minArea?: number;
   fills: Fill[];
-  /** Palette the pen picker opens with. */
+  /** Pens used on this page, most recent first. */
+  recent?: { p: string; c: string; hex: string; n: string }[];
+  /** No longer used (pens come from Settings → My pens); kept for older pages and exports. */
   paletteId: string;
   /** Pen set the user owns, filters the picker. */
   setId?: string;

@@ -17,7 +17,8 @@
   /** How deep a screen sits: going deeper slides in from the right, going up slides back. */
   const depth = (path: string | undefined) => {
     if (!path) return 0;
-    if (path.endsWith('/edit')) return 2;
+    if (path.endsWith('/settings/pens/range')) return 3;
+    if (path.endsWith('/edit') || path.endsWith('/settings/pens')) return 2;
     if (path.endsWith('/new') || path.endsWith('/settings')) return 1;
     return 0;
   };

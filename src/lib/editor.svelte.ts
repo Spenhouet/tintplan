@@ -34,8 +34,8 @@ export class Editor {
   pen = $state<PenRef | null>(null);
   showCodes = $state(true);
   name = $state('');
-  paletteId = $state('');
-  setId = $state<string | undefined>(undefined);
+  /** Pens used on this page, most recent first. */
+  recent = $state<PenRef[]>([]);
   private undoStack = $state.raw<Change[][]>([]);
   private redoStack = $state.raw<Change[][]>([]);
 
@@ -45,8 +45,6 @@ export class Editor {
     this.composite = new Composite(seg, page);
     this.fills = new Array(seg.count + 1).fill(null);
     this.name = project.name;
-    this.paletteId = project.paletteId;
-    this.setId = project.setId;
     for (const f of project.fills) {
       const x = Math.min(seg.width - 1, Math.max(0, Math.round(f.x)));
       const y = Math.min(seg.height - 1, Math.max(0, Math.round(f.y)));
@@ -55,7 +53,9 @@ export class Editor {
       this.fills[region] = ref(f);
       this.composite.set(region, f.hex);
     }
-    this.pen = settings.recent[0] ?? null;
+    // Pages from before recent pens were stored start with their pens by area count
+    this.recent = project.recent?.map(ref) ?? this.usedPens().map((u) => ref(u.pen));
+    this.pen = this.recent[0] ?? null;
   }
 
   static async open(id: string): Promise<Editor | null> {
@@ -122,8 +122,12 @@ export class Editor {
 
   choosePen(pen: PenRef) {
     this.pen = ref(pen);
-    settings.useRecent(this.pen);
     if (this.tool !== 'fill') this.tool = 'fill';
+  }
+
+  /** Move a pen to the front of this page's recent pens. */
+  private touch(pen: PenRef) {
+    this.recent = [ref(pen), ...this.recent.filter((r) => !samePen(r, pen))].slice(0, 40);
   }
 
   /** Swap every area filled with `from` to `to` (or clear them). */
@@ -162,6 +166,8 @@ export class Editor {
   private commit(changes: Change[]) {
     this.undoStack = [...this.undoStack.slice(-199), changes];
     this.redoStack = [];
+    const used = changes.find((c) => c.after)?.after;
+    if (used) this.touch(used);
     this.apply(changes);
   }
 
@@ -237,13 +243,6 @@ export class Editor {
     this.scheduleSave(0);
   }
 
-  setPalette(paletteId: string, setId?: string) {
-    this.paletteId = paletteId;
-    this.setId = setId;
-    settings.paletteId = paletteId;
-    this.scheduleSave(0);
-  }
-
   private scheduleSave(delay = 500) {
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => this.save(), delay);
@@ -256,8 +255,7 @@ export class Editor {
     const patch = {
       name: this.name,
       fills: this.toFills(),
-      paletteId: this.paletteId,
-      setId: this.setId,
+      recent: this.recent.map(ref),
       updatedAt: Date.now(),
       thumb: await this.thumbnail()
     };

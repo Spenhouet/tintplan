@@ -4,6 +4,14 @@ import { readFile } from 'node:fs/promises';
 const photo = new URL('./fixtures/page-photo.jpg', import.meta.url).pathname;
 
 test('photo to colored page, export and reimport', async ({ page }, testInfo) => {
+  // Choose owned pens in Settings: the Copic Sketch 12 set (with Y13) plus a single pen
+  await page.goto('/settings/pens');
+  await page.getByRole('link', { name: /Sketch/ }).click();
+  await page.getByRole('button', { name: '12 Colors Set', exact: true }).click();
+  await page.getByPlaceholder('Code, name or hex').fill('R81');
+  await page.getByRole('button', { name: 'R81', exact: true }).click();
+  await expect(page.getByText('13 of 358')).toBeVisible();
+
   await page.goto('/');
   await expect(page.getByText('No pages yet')).toBeVisible();
 
