@@ -1,0 +1,155 @@
+[
+  {
+    "id": "caran-dache-luminance",
+    "brand": "Caran d'Ache",
+    "name": "Luminance 6901",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/caran-dache-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 100
+  },
+  {
+    "id": "caran-dache-museum",
+    "brand": "Caran d'Ache",
+    "name": "Museum Aquarelle",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/caran-dache-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 76
+  },
+  {
+    "id": "caran-dache-neocolor-ii",
+    "brand": "Caran d'Ache",
+    "name": "Neocolor II Aquarelle",
+    "kind": "crayon",
+    "source": "github.com/scottgfhong310/caran-dache-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 84
+  },
+  {
+    "id": "caran-dache-pablo",
+    "brand": "Caran d'Ache",
+    "name": "Pablo",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/caran-dache-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 120
+  },
+  {
+    "id": "caran-dache-supracolor",
+    "brand": "Caran d'Ache",
+    "name": "Supracolor Soft Aquarelle",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/caran-dache-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 120
+  },
+  {
+    "id": "copic-ciao",
+    "brand": "Copic",
+    "name": "Ciao",
+    "kind": "marker",
+    "source": "github.com/scottgfhong310/copic-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 180
+  },
+  {
+    "id": "copic-classic",
+    "brand": "Copic",
+    "name": "Classic",
+    "kind": "marker",
+    "source": "github.com/scottgfhong310/copic-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 214
+  },
+  {
+    "id": "copic-sketch",
+    "brand": "Copic",
+    "name": "Sketch",
+    "kind": "marker",
+    "source": "github.com/scottgfhong310/copic-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 358
+  },
+  {
+    "id": "decotime",
+    "brand": "DecoTime",
+    "name": "Alcohol markers",
+    "kind": "marker",
+    "source": "github.com/dferrandizmont/ink-lab",
+    "license": "MIT, © 2026 Daniel Mont Ferrandiz",
+    "count": 313
+  },
+  {
+    "id": "faber-castell-albrecht-durer",
+    "brand": "Faber-Castell",
+    "name": "Albrecht Dürer",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/faber-castell-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 72
+  },
+  {
+    "id": "faber-castell-black-edition",
+    "brand": "Faber-Castell",
+    "name": "Black Edition",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/faber-castell-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 100
+  },
+  {
+    "id": "faber-castell-goldfaber",
+    "brand": "Faber-Castell",
+    "name": "Goldfaber",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/faber-castell-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 48
+  },
+  {
+    "id": "faber-castell-polychromos",
+    "brand": "Faber-Castell",
+    "name": "Polychromos",
+    "kind": "pencil",
+    "source": "github.com/scottgfhong310/faber-castell-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 120
+  },
+  {
+    "id": "finecolour",
+    "brand": "Finecolour",
+    "name": "Markers",
+    "kind": "marker",
+    "source": "github.com/scottgfhong310/finecolour-color",
+    "license": "MIT, © 2026 Scott G.F. Hong",
+    "count": 480
+  },
+  {
+    "id": "ohuhu-honolulu",
+    "brand": "Ohuhu",
+    "name": "Honolulu",
+    "kind": "marker",
+    "source": "github.com/dferrandizmont/ink-lab",
+    "license": "MIT, © 2026 Daniel Mont Ferrandiz",
+    "count": 367
+  },
+  {
+    "id": "ohuhu-kaala",
+    "brand": "Ohuhu",
+    "name": "Kaala",
+    "kind": "marker",
+    "source": "github.com/dferrandizmont/ink-lab",
+    "license": "MIT, © 2026 Daniel Mont Ferrandiz",
+    "count": 200
+  },
+  {
+    "id": "ohuhu-oahu",
+    "brand": "Ohuhu",
+    "name": "Oahu",
+    "kind": "marker",
+    "source": "github.com/dferrandizmont/ink-lab",
+    "license": "MIT, © 2026 Daniel Mont Ferrandiz",
+    "count": 321
+  }
+]
