@@ -33,11 +33,8 @@
   "prepare_cleanup": "Clean up",
   "prepare_cleanup_on": "Enhance",
   "prepare_cleanup_off": "Use as is",
-  "prepare_cleanup_hint": "Enhance removes shadows and makes lines black. Use as is for images that are already clean, like a scan or an earlier export.",
   "prepare_strength": "Line strength",
-  "prepare_strength_hint": "Higher turns faint lines black, lower keeps fine detail.",
   "prepare_gaps": "Close gaps in lines",
-  "prepare_gaps_hint": "Stops color from leaking through small breaks in lines.",
   "prepare_working": "Working…",
   "prepare_start": "Start coloring",
   "prepare_lost": "The photo is gone after reloading. Please pick it again.",
@@ -89,5 +86,13 @@
   "settings_data": "Pen colors",
   "settings_data_hint": "Colors are approximations sampled from the makers' color charts. Real ink and pencil look different on paper, so swatch your pens to be sure.",
   "settings_privacy": "No account, no server. Your photos and pages stay on this device.",
-  "pens_count": "{count} pens"
+  "save_or_share": "Save or share",
+  "pens_count_one": "1 pen",
+  "pens_count_other": "{count} pens",
+  "finding_areas": "Finding areas…",
+  "fit_page": "Fit page",
+  "prepare_cleanup_on_hint": "Removes shadows and makes lines black.",
+  "prepare_cleanup_off_hint": "For scans and earlier exports.",
+  "prepare_strength_faint": "Fine",
+  "prepare_strength_bold": "Bold"
 }

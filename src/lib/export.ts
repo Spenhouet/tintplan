@@ -1,6 +1,7 @@
 import { CHUNK, addChunk, pack, readChunk, unpack } from './image/png';
 import { drawLabels, LABEL_FONT, type Composite, type Label } from './image/render';
 import { db, newId, type Fill, type Project } from './db';
+import { isNative, shareNative } from './native';
 
 export interface LegendItem {
   code: string;
@@ -120,6 +121,7 @@ export async function importEmbedded(file: Blob): Promise<string | null> {
 
 /** Share the file where the browser can (phones), otherwise download it. */
 export async function saveFile(filename: string, bytes: Uint8Array, mime: string, share = false): Promise<void> {
+  if (isNative) return shareNative(filename, bytes);
   const file = new File([bytes as BlobPart], filename, { type: mime });
   if (share && navigator.canShare?.({ files: [file] })) {
     try {

@@ -6,20 +6,21 @@
   import Group from '$lib/components/app/Group.svelte';
   import Row from '$lib/components/app/Row.svelte';
   import Segmented from '$lib/components/app/Segmented.svelte';
-  import { palettes, paletteLabel } from '$lib/pens';
+  import { palettes } from '$lib/pens';
   import { settings } from '$lib/settings.svelte';
   import { getLocale, setLocale } from '$lib/paraglide/runtime';
   import { m } from '$lib/paraglide/messages.js';
 
   const REPO = 'https://github.com/Spenhouet/tintplan';
 
-  // One row per data source, listing the palettes taken from it
+  // One row per data source: its brands, the ranges taken from it, and the license
   const sources = $derived.by(() => {
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, not reactive state
-    const map = new Map<string, { license: string; names: string[] }>();
+    const map = new Map<string, { license: string; brands: string[]; ranges: string[] }>();
     for (const p of palettes) {
-      const s = map.get(p.source) ?? { license: p.license, names: [] };
-      s.names.push(paletteLabel(p));
+      const s = map.get(p.source) ?? { license: p.license, brands: [], ranges: [] };
+      if (!s.brands.includes(p.brand)) s.brands.push(p.brand);
+      s.ranges.push(p.name);
       map.set(p.source, s);
     }
     return [...map];
@@ -71,8 +72,8 @@
     <Group title={m.settings_data()} footer={m.settings_data_hint()}>
       {#each sources as [source, info] (source)}
         <Row
-          label={info.names.join(', ')}
-          description={`${source} · ${info.license}`}
+          label={info.brands.join(' · ')}
+          description={`${info.ranges.join(', ')}. ${info.license}`}
           href={`https://${source}`}
           icon={ExternalLink}
         />

@@ -9,34 +9,59 @@
     width,
     height,
     ontap,
-    children
-  }: { width: number; height: number; ontap: (x: number, y: number) => void; children: Snippet } = $props();
+    onzoom,
+    children,
+    overlay
+  }: {
+    width: number;
+    height: number;
+    /** Image pixels, plus the tap position on screen relative to the viewport. */
+    ontap: (x: number, y: number, screen: { x: number; y: number }) => void;
+    /** Whether the page is zoomed or moved away from the fitted view. */
+    onzoom?: (moved: boolean) => void;
+    children: Snippet;
+    /** Screen-space content over the page, like tap ripples and buttons. */
+    overlay?: Snippet;
+  } = $props();
 
   let box = $state<HTMLDivElement>();
   let content = $state<HTMLDivElement>();
   let boxW = $state(0);
   let boxH = $state(0);
   let view = { s: 1, tx: 0, ty: 0 };
-  let fitted = false;
+  /** Until the user zooms or pans, the page keeps fitting the viewport as it resizes. */
+  let userMoved = false;
 
   const fitScale = () => Math.min(boxW / width, boxH / height) * 0.96;
 
-  function apply() {
-    if (content) content.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`;
+  function apply(animate = false) {
+    if (!content) return;
+    content.style.transition = animate ? 'transform 280ms cubic-bezier(0.2, 0.7, 0.3, 1)' : '';
+    content.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`;
   }
 
-  export function fit() {
+  function moved() {
+    if (!userMoved) {
+      userMoved = true;
+      onzoom?.(true);
+    }
+  }
+
+  /** Fit the whole page, animated when `animate`. */
+  export function fit(animate = false) {
     const s = fitScale();
     view = { s, tx: (boxW - width * s) / 2, ty: (boxH - height * s) / 2 };
-    apply();
+    apply(animate);
+    if (userMoved) {
+      userMoved = false;
+      onzoom?.(false);
+    }
   }
 
   $effect(() => {
     if (!boxW || !boxH) return;
-    if (!fitted) {
-      fitted = true;
-      fit();
-    } else {
+    if (!userMoved) fit();
+    else {
       clamp();
       apply();
     }
@@ -58,6 +83,7 @@
     view = { s, tx: cx - ix * s, ty: cy - iy * s };
     clamp();
     apply();
+    moved();
   }
 
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, not reactive state
@@ -113,6 +139,7 @@
       view = { s, tx: mid.x - ix * s, ty: mid.y - iy * s };
       clamp();
       apply();
+      moved();
       return;
     }
     if (!gesture.moved && Math.hypot(p.x - gesture.start.x, p.y - gesture.start.y) > 8) gesture.moved = true;
@@ -120,6 +147,7 @@
       view = { ...view, tx: view.tx + p.x - gesture.last.x, ty: view.ty + p.y - gesture.last.y };
       clamp();
       apply();
+      moved();
     }
     gesture.last = p;
   }
@@ -133,7 +161,7 @@
       gesture = null;
       if (!g.moved && !g.multi && performance.now() - g.start.t < 600) {
         const p = local(e);
-        ontap((p.x - view.tx) / view.s, (p.y - view.ty) / view.s);
+        ontap((p.x - view.tx) / view.s, (p.y - view.ty) / view.s, p);
       }
     } else if (pointers.size === 1) {
       // One finger lifted from a pinch: continue as a pan from here
@@ -175,4 +203,5 @@
   >
     {@render children()}
   </div>
+  {@render overlay?.()}
 </div>

@@ -141,3 +141,90 @@
 @utility grid-cols-swatches {
   grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
 }
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Feedback where a tap filled an area */
+@theme {
+  --animate-ripple: ripple 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+
+@keyframes ripple {
+  from {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.9;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Cards and panels entering a page */
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+@utility delay-stagger {
+  animation-delay: calc(min(var(--i, 0), 12) * 35ms);
+}
+
+/* Page transitions (View Transitions API), direction set on <html> by the layout */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+html[data-nav='forward']::view-transition-old(root) {
+  animation-name: vt-out-left;
+}
+html[data-nav='forward']::view-transition-new(root) {
+  animation-name: vt-in-right;
+}
+html[data-nav='back']::view-transition-old(root) {
+  animation-name: vt-out-right;
+}
+html[data-nav='back']::view-transition-new(root) {
+  animation-name: vt-in-left;
+}
+@keyframes vt-in-right {
+  from {
+    transform: translateX(24%);
+    opacity: 0;
+  }
+}
+@keyframes vt-out-left {
+  to {
+    transform: translateX(-12%);
+    opacity: 0;
+  }
+}
+@keyframes vt-in-left {
+  from {
+    transform: translateX(-12%);
+    opacity: 0;
+  }
+}
+@keyframes vt-out-right {
+  to {
+    transform: translateX(24%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

@@ -3,6 +3,7 @@
   import { liveQuery } from 'dexie';
   import { Palette, Settings, Trash2 } from '@lucide/svelte';
   import { onDestroy } from 'svelte';
+  import { fade } from 'svelte/transition';
   import PageHeader from '$lib/components/app/PageHeader.svelte';
   import ImportButtons from '$lib/components/app/ImportButtons.svelte';
   import Confirm from '$lib/components/app/Confirm.svelte';
@@ -44,7 +45,7 @@
   </PageHeader>
 
   {#if $projects && $projects.length === 0}
-    <section class="mx-auto mt-6 flex max-w-xl flex-col items-center gap-4 surface p-6 text-center">
+    <section class="mx-auto mt-6 flex max-w-sm animate-rise flex-col items-center gap-4 surface p-6 text-center">
       <span class="flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary">
         <Palette class="size-8" />
       </span>
@@ -52,13 +53,17 @@
         <h2 class="text-lg font-semibold">{m.library_empty_title()}</h2>
         <p class="text-sm text-muted-foreground">{m.library_empty_text()}</p>
       </div>
-      <div class="w-full"><ImportButtons /></div>
+      <div class="w-full"><ImportButtons stacked /></div>
     </section>
   {:else if $projects}
     <div class="mb-4"><ImportButtons size="default" /></div>
     <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
-      {#each $projects as p (p.id)}
-        <li class="relative overflow-hidden surface">
+      {#each $projects as p, i (p.id)}
+        <li
+          class="relative animate-rise overflow-hidden surface transition-transform delay-stagger active:scale-98"
+          style="--i: {i}"
+          out:fade={{ duration: 150 }}
+        >
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
           <a href={`${resolve('/edit')}?id=${p.id}`} class="flex flex-col">
             <div class="flex aspect-3/4 items-center justify-center bg-muted">

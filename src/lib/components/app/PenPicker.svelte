@@ -68,7 +68,7 @@
       <Field label={m.palette()}>
         <NativeSelect
           value={editor.paletteId}
-          options={palettes.map((p) => ({ value: p.id, label: p.name, group: p.brand }))}
+          options={palettes.map((p) => ({ value: p.id, label: paletteLabel(p), group: p.brand }))}
           onchange={(v) => editor.setPalette(v)}
         />
       </Field>
@@ -95,7 +95,9 @@
         <h3 class="flex-1 truncate text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {palette ? paletteLabel(palette) : ''}
         </h3>
-        <span class="text-xs text-muted-foreground tabular">{m.pens_count({ count: pens.length })}</span>
+        <span class="text-xs text-muted-foreground tabular"
+          >{pens.length === 1 ? m.pens_count_one() : m.pens_count_other({ count: pens.length })}</span
+        >
       </div>
       <Input bind:value={query} placeholder={m.search_pens()} type="search" aria-label={m.search_pens()} />
       {#if pens.length}

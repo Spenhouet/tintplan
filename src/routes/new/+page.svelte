@@ -6,7 +6,8 @@
   import { toast } from 'svelte-sonner';
   import CornerEditor from '$lib/components/app/CornerEditor.svelte';
   import Segmented from '$lib/components/app/Segmented.svelte';
-  import Field from '$lib/components/app/Field.svelte';
+  import { fade, slide } from 'svelte/transition';
+  import { cn } from '$lib/utils';
   import { Button } from '$lib/components/ui/button';
   import { run } from '$lib/image/protocol';
   import { fullQuad } from '$lib/image/warp';
@@ -105,8 +106,8 @@
   }
 </script>
 
-<div class="flex h-dvh flex-col bg-background">
-  <header class="flex h-14 shrink-0 items-center gap-1 px-2 pt-safe">
+<div class="flex h-dvh flex-col overflow-hidden bg-background">
+  <header class="box-content flex h-14 shrink-0 items-center gap-1 px-2 pt-safe">
     <Button
       variant="ghost"
       size="icon"
@@ -118,22 +119,40 @@
     <h1 class="flex-1 truncate text-lg font-semibold">
       {step === 'crop' ? m.prepare_crop_title() : m.prepare_clean_title()}
     </h1>
-    {#if busy}<LoaderCircle class="mr-3 size-5 animate-spin text-muted-foreground" />{/if}
+    <span class="mr-3 text-xs font-medium text-muted-foreground tabular">{step === 'crop' ? 1 : 2} / 2</span>
   </header>
 
-  <div class="min-h-0 flex-1 bg-muted p-4">
+  <div class="relative grid min-h-0 flex-1 bg-muted p-4">
     {#if step === 'crop' && size}
-      <CornerEditor src={photoUrl} width={size.width} height={size.height} bind:quad />
+      <div class="min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
+        <CornerEditor src={photoUrl} width={size.width} height={size.height} bind:quad />
+      </div>
     {:else if step === 'clean' && result}
-      <img src={result.url} alt="" class="size-full object-contain" />
+      <div class="relative min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
+        <img
+          src={result.url}
+          alt=""
+          class={cn('size-full object-contain transition-opacity duration-200', busy && 'opacity-60')}
+        />
+      </div>
     {:else}
-      <div class="flex size-full items-center justify-center">
+      <div class="flex stack-item items-center justify-center" in:fade={{ duration: 200, delay: 100 }}>
         <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
+      </div>
+    {/if}
+    {#if busy && result}
+      <div
+        class="pointer-events-none absolute inset-0 flex items-center justify-center"
+        transition:fade={{ duration: 150 }}
+      >
+        <span class="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm shadow-lg">
+          <LoaderCircle class="size-4 animate-spin text-primary" />{m.prepare_working()}
+        </span>
       </div>
     {/if}
   </div>
 
-  <div class="mx-auto flex w-full max-w-lg shrink-0 flex-col gap-4 p-4 pb-safe-4">
+  <div class="mx-auto flex w-full max-w-lg shrink-0 flex-col gap-3 px-4 pt-3 pb-safe-4">
     {#if step === 'crop'}
       <p class="text-sm text-muted-foreground">{m.prepare_crop_hint()}</p>
       <div class="flex gap-2">
@@ -160,17 +179,27 @@
         }}>{m.next()}</Button
       >
     {:else}
-      <Segmented
-        bind:value={enhance}
-        options={[
-          { value: 'on', label: m.prepare_cleanup_on() },
-          { value: 'off', label: m.prepare_cleanup_off() }
-        ]}
-        onchange={reprocess}
-      />
-      <p class="-mt-2 text-xs text-muted-foreground">{m.prepare_cleanup_hint()}</p>
+      <div class="flex flex-col gap-1.5">
+        <Segmented
+          bind:value={enhance}
+          options={[
+            { value: 'on', label: m.prepare_cleanup_on() },
+            { value: 'off', label: m.prepare_cleanup_off() }
+          ]}
+          onchange={reprocess}
+        />
+        <p class="px-1 text-xs text-muted-foreground">
+          {enhance === 'on' ? m.prepare_cleanup_on_hint() : m.prepare_cleanup_off_hint()}
+        </p>
+      </div>
       {#if enhance === 'on'}
-        <Field label={m.prepare_strength()} hint={m.prepare_strength_hint()}>
+        <label class="flex flex-col gap-1" transition:slide={{ duration: 180 }}>
+          <span class="flex items-baseline justify-between text-sm font-medium">
+            {m.prepare_strength()}
+            <span class="text-xs font-normal text-muted-foreground">
+              {m.prepare_strength_faint()} – {m.prepare_strength_bold()}
+            </span>
+          </span>
           <input
             type="range"
             min="0"
@@ -179,11 +208,15 @@
             oninput={reprocess}
             class="w-full accent-primary"
           />
-        </Field>
+        </label>
       {/if}
-      <Field label={m.prepare_gaps()} hint={m.prepare_gaps_hint()}>
+      <label class="flex flex-col gap-1">
+        <span class="flex items-baseline justify-between text-sm font-medium">
+          {m.prepare_gaps()}
+          <span class="text-xs font-normal text-muted-foreground tabular">{gap}</span>
+        </span>
         <input type="range" min="0" max="8" step="1" bind:value={gap} class="w-full accent-primary" />
-      </Field>
+      </label>
       <Button size="lg" disabled={!result || busy} onclick={start}>{m.prepare_start()}</Button>
     {/if}
   </div>

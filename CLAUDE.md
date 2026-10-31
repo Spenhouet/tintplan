@@ -1,6 +1,6 @@
 # Tintplan
 
-Offline coloring planner. Photograph a coloring page, clean up the lines, tap areas to fill them with real pen colors, and get the pen codes written into the areas. Static SvelteKit app (no server) deployed to GitHub Pages as a PWA.
+Offline coloring planner. Photograph a coloring page, clean up the lines, tap areas to fill them with real pen colors, and get the pen codes written into the areas. Static SvelteKit app (no server) deployed to GitHub Pages as a PWA, and wrapped with Capacitor as an Android APK.
 
 ## Commands
 
@@ -9,6 +9,8 @@ Offline coloring planner. Photograph a coloring page, clean up the lines, tap ar
 - `bun run lint`: eslint and prettier
 - `bunx vitest --run`: unit tests (image pipeline, PNG chunks, labels)
 - `bunx playwright test`: e2e against a production build (`bun run preview`)
+- `CAPACITOR=1 bun run build && bunx cap sync android`: web build for the APK
+- `bun scripts/android-icons.ts`: render launcher icons and splash screens from `static/favicon.svg`
 - `bun run pens <dir>`: rebuild `src/lib/pens/data/` from the raw source files (see `scripts/import-pens.ts`)
 
 ## Layout
@@ -23,6 +25,7 @@ Offline coloring planner. Photograph a coloring page, clean up the lines, tap ar
 - `src/lib/db/`: Dexie schema. Fills are stored as a point inside the area, not as an area number, so they survive changes to the segmentation.
 - `src/lib/pens/`: palette index and lazily loaded palette JSON.
 - `src/lib/export.ts`: PNG rendering with codes and legend, embedding and importing projects, file saving.
+- `src/lib/native/`: Capacitor bridge (back button, haptics, share sheet). Everything else is the same web code.
 - `src/routes/`: library (`/`), photo preparation (`/new`), editor (`/edit?id=`), `/settings`.
 - `messages/{en,de}.json`: every UI string. Add both languages for each new key.
 
@@ -32,7 +35,9 @@ Read `DESIGN.md` before touching UI. After making changes, run `bun run lint` an
 
 ## Releases
 
-Add every user-facing change to `CHANGELOG.md` under "Unreleased" (Features / Fixes). To release: rename that section to the new version with the date, bump `version` in `package.json`, commit, then tag `vX.Y.Z` and push the tag.
+Add every user-facing change to `CHANGELOG.md` under "Unreleased" (Features / Fixes). To release: rename that section to the new version with the date, bump `version` in `package.json`, commit, then tag `vX.Y.Z` and push the tag. The Android Release workflow uses the section as the release notes and fails if it's missing. Pull requests build a signed APK artifact too.
+
+The release keystore is backed up outside the repo; its secrets are `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. Losing it means existing installs can't update.
 
 ## Conventions
 
