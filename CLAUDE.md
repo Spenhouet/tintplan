@@ -24,7 +24,7 @@ Offline coloring planner. Photograph a coloring page, clean up the lines, tap ar
   - `worker.ts` runs decode, cleanup and segmentation off the main thread; `protocol.ts` is the typed RPC.
 - `src/lib/editor.svelte.ts`: an open page. Fills per area, undo/redo, labels, legend, debounced saving with a thumbnail.
 - `src/lib/db/`: Dexie schema. A page stores the image shown while coloring (`line`: lines, gray or original) and the outlines the areas come from (`outline`). Fills are stored as a point inside the area, not as an area number, so they survive changes to the segmentation.
-- `src/lib/pens/`: palette index and lazily loaded palette JSON, `loadOwned` (the user's pens across ranges) and `sortByColor` (OKLCH hue steps, light to dark, neutrals last). Owned codes live in `settings.owned` per palette, edited under `/settings/pens`.
+- `src/lib/pens/`: palette index and lazily loaded palette JSON, `loadOwned` (the user's pens across ranges) and `color.ts`: color families by OKLCH hue (browns and neutrals separate) and, within a family, the shortest light-to-dark path in OKLab (nearest neighbor + 2-opt) — compared visually against hue-step, Zucconi step and lightness sorting on full Copic and Ohuhu ranges. Owned codes live in `settings.owned` per palette, edited under `/settings/pens`.
 - `src/lib/export.ts`: PNG rendering with codes and legend, embedding and importing projects, file saving.
 - `src/lib/native/`: Capacitor bridge (back button, haptics, share sheet). Everything else is the same web code.
 - `src/routes/`: library (`/`), photo preparation (`/new`: crop, then check areas with live re-detection), editor (`/edit?id=`), `/settings`.

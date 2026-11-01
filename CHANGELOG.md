@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.4.1 - 2026-11-01
+
+### Fixes
+
+- Pen colors are sorted the way pen charts are: grouped into color families (red, orange, yellow, green, turquoise, blue, violet, pink, brown, white and gray), each with a heading, and within a family as a smooth run from light to dark. The previous order jumped between light and dark every few pens.
+
 ## 0.4.0 - 2026-11-01
 
 ### Features
