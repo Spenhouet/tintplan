@@ -158,12 +158,16 @@
     {:else if step === 'areas' && detection && image}
       <div class="min-h-0 stack-item" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
         <Viewport width={detection.width} height={detection.height} ontap={() => (showAreas = !showAreas)}>
-          <img src={image.url} alt="" class="absolute inset-0 size-full bg-card" draggable="false" />
-          {#if showAreas}
-            {#key scanRun}
-              <ScanOverlay map={detection.scan} hold sweep={scanRun > 1 ? 0.6 : 1.2} />
-            {/key}
-          {/if}
+          <!-- Areas glow under the page and the page is multiplied on top, like the fills later:
+               outlines stay black, colors sit behind them -->
+          <div class="absolute inset-0 isolate bg-white">
+            {#if showAreas}
+              {#key scanRun}
+                <ScanOverlay map={detection.scan} hold sweep={scanRun > 1 ? 0.6 : 1.2} />
+              {/key}
+            {/if}
+            <img src={image.url} alt="" class="absolute inset-0 size-full mix-blend-multiply" draggable="false" />
+          </div>
           {#snippet overlay()}
             <div class="pointer-events-none absolute inset-x-3 top-3 flex items-center justify-between gap-2">
               <span

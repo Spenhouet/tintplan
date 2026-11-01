@@ -84,6 +84,33 @@
   /** This page's recently used pens, newest first, without the current pen. */
   const strip = $derived(editor ? editor.recent.filter((r) => r.p !== editor!.pen?.p || r.c !== editor!.pen?.c) : []);
 
+  // Swipe up on the bottom bar opens the picker; the tap that started it doesn't also count
+  let barSwipe: { x: number; y: number } | null = null;
+  let swallowClick = false;
+
+  function barDown(e: PointerEvent) {
+    barSwipe = { x: e.clientX, y: e.clientY };
+    swallowClick = false;
+  }
+
+  function barMove(e: PointerEvent) {
+    if (!barSwipe) return;
+    const dx = e.clientX - barSwipe.x;
+    const dy = e.clientY - barSwipe.y;
+    if (dy < -36 && Math.abs(dy) > Math.abs(dx) * 1.5) {
+      barSwipe = null;
+      swallowClick = true;
+      pickerOpen = true;
+    }
+  }
+
+  function barClick(e: MouseEvent) {
+    if (!swallowClick) return;
+    swallowClick = false;
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
   let viewport = $state<Viewport>();
   let zoomed = $state(false);
 
@@ -223,8 +250,18 @@
   </div>
 
   {#if editor}
-    <div class="shrink-0 border-t bg-card pb-safe">
-      <div class="flex items-center gap-2 px-2 pt-2">
+    <!-- Swiping up on the bar opens the pen picker, like pulling up a drawer -->
+    <div
+      class="shrink-0 touch-pan-x border-t bg-card pb-safe"
+      role="presentation"
+      onpointerdown={barDown}
+      onpointermove={barMove}
+      onpointerup={() => (barSwipe = null)}
+      onpointercancel={() => (barSwipe = null)}
+      onclickcapture={barClick}
+    >
+      <div class="mx-auto mt-1.5 h-1 w-10 rounded-full bg-muted"></div>
+      <div class="flex items-center gap-2 px-2 pt-1">
         <!-- The current pen; the only way to choose another pen from the full list -->
         <button
           type="button"

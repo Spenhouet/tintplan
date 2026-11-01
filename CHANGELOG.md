@@ -7,6 +7,9 @@
 ### Features
 
 - Pen details: hover over a color on desktop, or long press it on a phone, to see the pen's code, name, brand and range, its color value and, for renumbered pens, the former code. In the pen picker, Settings → My pens and the editor's recent colors.
+- Swatch chart: Settings → My pens exports a printable PDF of your pens, in the picker's color order with family headings. Each pen has an empty box to color in with the real pen, with its code, name, brand and range.
+- Swipe up on the editor's bottom bar to open the pen picker. Swipe down anywhere in a sheet (from the top of its list) to close it.
+- Check areas: the area colors sit behind the outlines, like the fills will, so the preview shows the page as it will look.
 
 ## 0.4.1 - 2026-11-01
 
