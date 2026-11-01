@@ -8,6 +8,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { brandShort, loadOwned, matchesQuery, type OwnedPen } from '$lib/pens';
+  import { family, type Family } from '$lib/pens/color';
   import { settings, type PenRef } from '$lib/settings.svelte';
   import { m } from '$lib/paraglide/messages.js';
 
@@ -40,6 +41,29 @@
   const pens = $derived(
     (mine ?? []).filter((p) => matchesQuery({ code: p.c, name: p.n, hex: p.hex, alt: p.alt }, query))
   );
+  /** The (already color-sorted) list cut into its color families, for section headings. */
+  const sections = $derived(
+    pens.reduce<{ family: Family; pens: OwnedPen[] }[]>((acc, pen) => {
+      const f = family(pen.hex);
+      if (acc.at(-1)?.family === f) acc.at(-1)!.pens.push(pen);
+      else acc.push({ family: f, pens: [pen] });
+      return acc;
+    }, [])
+  );
+
+  const familyNames: Record<Family, () => string> = {
+    red: m.family_red,
+    orange: m.family_orange,
+    yellow: m.family_yellow,
+    green: m.family_green,
+    teal: m.family_teal,
+    blue: m.family_blue,
+    violet: m.family_violet,
+    pink: m.family_pink,
+    brown: m.family_brown,
+    gray: m.family_gray
+  };
+
   /** Show the brand under each code when pens come from more than one brand. */
   const brands = $derived(new Set((mine ?? []).map((p) => p.brand)).size);
   const marked = $derived(replacing ?? current);
@@ -78,16 +102,25 @@
         <Button variant="ghost" size="sm" onclick={editPens}>{m.my_pens()}</Button>
       </div>
       {#if pens.length}
-        <div class="grid grid-cols-swatches gap-1">
-          {#each pens as pen (pen.p + pen.c)}
-            <Swatch
-              hex={pen.hex}
-              code={pen.c}
-              sub={brands > 1 ? brandShort(pen.brand) : undefined}
-              title={`${pen.n} · ${pen.brand} ${pen.range}`}
-              selected={marked?.p === pen.p && marked?.c === pen.c}
-              onclick={() => choose(pen)}
-            />
+        <div class="flex flex-col gap-3">
+          {#each sections as section (section.family)}
+            <section class="flex flex-col gap-1">
+              <h3 class="px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {familyNames[section.family]()}
+              </h3>
+              <div class="grid grid-cols-swatches gap-1">
+                {#each section.pens as pen (pen.p + pen.c)}
+                  <Swatch
+                    hex={pen.hex}
+                    code={pen.c}
+                    sub={brands > 1 ? brandShort(pen.brand) : undefined}
+                    title={`${pen.n} · ${pen.brand} ${pen.range}`}
+                    selected={marked?.p === pen.p && marked?.c === pen.c}
+                    onclick={() => choose(pen)}
+                  />
+                {/each}
+              </div>
+            </section>
           {/each}
         </div>
       {:else}

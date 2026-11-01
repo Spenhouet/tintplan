@@ -103,5 +103,15 @@
   "no_pens_yet": "Choose the pens you own first. Only those appear here, sorted by color.",
   "my_pens_settings_hint": "Choose the pens you own: whole sets or single pens, from any brand. The pen picker shows only these, sorted by color.",
   "my_pens_row_hint": "The pen picker shows only the pens you own.",
-  "sets_hint": "Tap a set to add all its pens. Tap it again to remove them."
+  "sets_hint": "Tap a set to add all its pens. Tap it again to remove them.",
+  "family_red": "Red",
+  "family_orange": "Orange",
+  "family_yellow": "Yellow",
+  "family_green": "Green",
+  "family_teal": "Turquoise",
+  "family_blue": "Blue",
+  "family_violet": "Violet",
+  "family_pink": "Pink",
+  "family_brown": "Brown",
+  "family_gray": "White & gray"
 }

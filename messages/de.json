@@ -103,5 +103,15 @@
   "no_pens_yet": "Wähle zuerst die Stifte, die du hast. Nur diese erscheinen hier, nach Farbe sortiert.",
   "my_pens_settings_hint": "Wähle die Stifte, die du hast: ganze Sets oder einzelne Stifte, von jeder Marke. Die Stiftauswahl zeigt nur diese, nach Farbe sortiert.",
   "my_pens_row_hint": "Die Stiftauswahl zeigt nur die Stifte, die du hast.",
-  "sets_hint": "Tippe auf ein Set, um alle seine Stifte hinzuzufügen. Nochmal tippen entfernt sie."
+  "sets_hint": "Tippe auf ein Set, um alle seine Stifte hinzuzufügen. Nochmal tippen entfernt sie.",
+  "family_red": "Rot",
+  "family_orange": "Orange",
+  "family_yellow": "Gelb",
+  "family_green": "Grün",
+  "family_teal": "Türkis",
+  "family_blue": "Blau",
+  "family_violet": "Violett",
+  "family_pink": "Pink",
+  "family_brown": "Braun",
+  "family_gray": "Weiß & Grau"
 }
