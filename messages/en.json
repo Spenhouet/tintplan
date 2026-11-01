@@ -114,5 +114,9 @@
   "family_pink": "Pink",
   "family_brown": "Brown",
   "family_gray": "White & gray",
-  "former_code": "formerly {code}"
+  "former_code": "formerly {code}",
+  "chart_export": "Swatch chart (PDF)",
+  "chart_hint": "Print it and color each box with the real pen to see its true color.",
+  "chart_subtitle": "{count} pens · {date}",
+  "chart_footer": "Tintplan · page {page} of {pages}"
 }

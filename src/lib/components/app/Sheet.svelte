@@ -21,6 +21,49 @@
   } = $props();
 
   let content = $state<HTMLElement | null>(null);
+  let scroller = $state<HTMLElement | null>(null);
+
+  $effect(() => {
+    const el = scroller;
+    if (!el) return;
+    let pull: { y: number; t: number; dy: number; active: boolean } | null = null;
+    const start = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || matchMedia('(min-width: 640px)').matches) return;
+      pull = { y: e.touches[0].clientY, t: performance.now(), dy: 0, active: false };
+    };
+    const move = (e: TouchEvent) => {
+      if (!pull || !content) return;
+      const dy = e.touches[0].clientY - pull.y;
+      if (!pull.active) {
+        // Only a downward pull from the very top; anything else is normal scrolling
+        if (el.scrollTop > 0 || dy < 8) {
+          if (dy < -8 || el.scrollTop > 0) pull = null;
+          return;
+        }
+        pull.active = true;
+        pull.y += 8;
+        pull.t = performance.now();
+      }
+      e.preventDefault();
+      pull.dy = Math.max(0, e.touches[0].clientY - pull.y);
+      content.style.transition = 'none';
+      content.style.transform = `translateY(${pull.dy}px)`;
+    };
+    const end = () => {
+      if (pull?.active) release(pull);
+      pull = null;
+    };
+    el.addEventListener('touchstart', start, { passive: true });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
+  });
   /** Set when the sheet was swiped away, so the exit animation doesn't play a second time. */
   let swiped = $state(false);
 
@@ -54,7 +97,12 @@
   function up() {
     const d = drag;
     drag = null;
-    if (!d?.moved || !content) return;
+    if (d?.moved) release(d);
+  }
+
+  /** Close when pulled far or flicked, otherwise spring back. */
+  function release(d: { t: number; dy: number }) {
+    if (!content) return;
     const el = content;
     const velocity = d.dy / Math.max(1, performance.now() - d.t);
     el.style.transition = 'transform 200ms cubic-bezier(0.2, 0.7, 0.3, 1)';
@@ -70,6 +118,10 @@
   }
 </script>
 
+<!--
+  Pulling the content down while it is scrolled to the top drags the sheet too. Touch events,
+  because the browser takes over pointer events once it scrolls.
+-->
 <DialogPrimitive.Root bind:open>
   <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay
@@ -110,7 +162,7 @@
           </DialogPrimitive.Close>
         </div>
       </div>
-      <div class="flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-4">
+      <div bind:this={scroller} class="flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-4">
         {@render children()}
       </div>
       {#if footer}

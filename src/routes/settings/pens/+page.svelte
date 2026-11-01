@@ -1,6 +1,12 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import { ChevronRight } from '@lucide/svelte';
+  import { ChevronRight, FileDown, LoaderCircle } from '@lucide/svelte';
+  import { toast } from 'svelte-sonner';
+  import { Button } from '$lib/components/ui/button';
+  import type { Family } from '$lib/pens/color';
+  import { swatchChart } from '$lib/swatch-pdf';
+  import { fileName, saveFile } from '$lib/export';
+  import { getLocale } from '$lib/paraglide/runtime';
   import PageHeader from '$lib/components/app/PageHeader.svelte';
   import PaletteStrip from '$lib/components/app/PaletteStrip.svelte';
   import { loadOwned, palettes, type OwnedPen, type PaletteInfo } from '$lib/pens';
@@ -17,6 +23,39 @@
   }, []);
 
   let mine = $state<OwnedPen[]>([]);
+  let exporting = $state(false);
+
+  const familyNames: Record<Family, () => string> = {
+    red: m.family_red,
+    orange: m.family_orange,
+    yellow: m.family_yellow,
+    green: m.family_green,
+    teal: m.family_teal,
+    blue: m.family_blue,
+    violet: m.family_violet,
+    pink: m.family_pink,
+    brown: m.family_brown,
+    gray: m.family_gray
+  };
+
+  async function exportChart() {
+    exporting = true;
+    try {
+      const date = new Date().toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
+      const pdf = await swatchChart(mine, {
+        title: m.my_pens(),
+        subtitle: m.chart_subtitle({ count: mine.length, date }),
+        hint: m.chart_hint(),
+        family: (f) => familyNames[f](),
+        footer: (page, pages) => m.chart_footer({ page, pages })
+      });
+      await saveFile(`${fileName(m.my_pens(), 'pdf')}`, pdf, 'application/pdf', true);
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      exporting = false;
+    }
+  }
   $effect(() => {
     loadOwned(settings.ownedAll).then((p) => (mine = p));
   });
@@ -35,9 +74,15 @@
           {/each}
         </div>
       {/if}
-      <p class="text-sm font-medium tabular">
-        {settings.ownedCount === 1 ? m.pens_count_one() : m.pens_count_other({ count: settings.ownedCount })}
-      </p>
+      <div class="flex items-center gap-2">
+        <p class="flex-1 text-sm font-medium tabular">
+          {settings.ownedCount === 1 ? m.pens_count_one() : m.pens_count_other({ count: settings.ownedCount })}
+        </p>
+        <Button variant="secondary" size="sm" disabled={!mine.length || exporting} onclick={exportChart}>
+          {#if exporting}<LoaderCircle class="animate-spin" />{:else}<FileDown />{/if}{m.chart_export()}
+        </Button>
+      </div>
+      <p class="text-xs text-muted-foreground">{m.chart_hint()}</p>
     </section>
 
     <!-- eslint-disable svelte/no-navigation-without-resolve -- resolved path plus query -->

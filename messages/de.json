@@ -114,5 +114,9 @@
   "family_pink": "Pink",
   "family_brown": "Braun",
   "family_gray": "Weiß & Grau",
-  "former_code": "früher {code}"
+  "former_code": "früher {code}",
+  "chart_export": "Farbkarte (PDF)",
+  "chart_hint": "Ausdrucken und jedes Kästchen mit dem echten Stift ausmalen, um seine echte Farbe zu sehen.",
+  "chart_subtitle": "{count} Stifte · {date}",
+  "chart_footer": "Tintplan · Seite {page} von {pages}"
 }
