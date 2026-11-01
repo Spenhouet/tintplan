@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-11-01
+
+### Features
+
+- Swatch chart: Settings → My pens exports a printable PDF of your pens, in the picker's color order with family headings. Each pen has an empty box to color in with the real pen, with its code, name, brand and range.
+- Swipe up on the editor's bottom bar to open the pen picker. Swipe down anywhere in a sheet (from the top of its list) to close it.
+- Check areas: the area colors sit behind the outlines, like the fills will, so the preview shows the page as it will look.
+
 ## 0.5.0 - 2026-11-01
 
 ### Features
