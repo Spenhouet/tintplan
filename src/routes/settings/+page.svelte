@@ -92,6 +92,8 @@
     <Group title={m.settings_about()} footer={m.settings_privacy()}>
       <Row label={m.settings_version()} value={__APP_VERSION__} />
       <Row label={m.settings_source()} value="GitHub" href={REPO} />
+      <Row label={m.legal_notice()} href="https://spenhouet.com/impressum/" />
+      <Row label={m.privacy_policy()} href="https://spenhouet.com/datenschutz/" />
     </Group>
   </div>
 </main>
