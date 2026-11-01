@@ -31,6 +31,7 @@
   import { haptic } from '$lib/native';
   import { Editor, type Tool } from '$lib/editor.svelte';
   import { settings, type PenRef } from '$lib/settings.svelte';
+  import { paletteInfo } from '$lib/pens';
   import { cn } from '$lib/utils';
   import { m } from '$lib/paraglide/messages.js';
 
@@ -74,6 +75,11 @@
     void editor.version;
     return editor.labels(settings.labelScale);
   });
+
+  const penDetails = (p: PenRef) => {
+    const info = paletteInfo(p.p);
+    return { code: p.c, name: p.n, hex: p.hex, brand: info?.brand, range: info?.name };
+  };
 
   /** This page's recently used pens, newest first, without the current pen. */
   const strip = $derived(editor ? editor.recent.filter((r) => r.p !== editor!.pen?.p || r.c !== editor!.pen?.c) : []);
@@ -251,7 +257,7 @@
         <div class="flex min-w-0 flex-1 gap-0.5 overflow-x-auto" aria-label={m.recently_used()}>
           {#each strip as p (p.p + p.c)}
             <div animate:flip={{ duration: 200 }}>
-              <Swatch size="sm" hex={p.hex} code={p.c} title={p.n} onclick={() => editor?.choosePen(p)} />
+              <Swatch size="sm" hex={p.hex} code={p.c} details={penDetails(p)} onclick={() => editor?.choosePen(p)} />
             </div>
           {:else}
             <span class="self-center px-2 text-xs text-muted-foreground">{m.recently_used_empty()}</span>

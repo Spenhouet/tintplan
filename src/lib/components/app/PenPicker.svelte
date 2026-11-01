@@ -114,7 +114,14 @@
                     hex={pen.hex}
                     code={pen.c}
                     sub={brands > 1 ? brandShort(pen.brand) : undefined}
-                    title={`${pen.n} · ${pen.brand} ${pen.range}`}
+                    details={{
+                      code: pen.c,
+                      name: pen.n,
+                      hex: pen.hex,
+                      brand: pen.brand,
+                      range: pen.range,
+                      alt: pen.alt
+                    }}
                     selected={marked?.p === pen.p && marked?.c === pen.c}
                     onclick={() => choose(pen)}
                   />
