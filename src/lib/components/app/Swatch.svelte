@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Check } from '@lucide/svelte';
   import { cn } from '$lib/utils';
+  import { detailsTrigger, type PenDetails } from '$lib/peninfo.svelte';
 
   /** A pen color chip with its code. `size` lg is the current pen in the toolbar. */
   let {
@@ -12,6 +13,7 @@
     checked = false,
     sub,
     title,
+    details,
     onclick
   }: {
     hex: string;
@@ -25,17 +27,22 @@
     /** Small second line under the code, e.g. the brand. */
     sub?: string;
     title?: string;
+    /** Shown on hover (mouse) or long press (touch). Replaces `title`. */
+    details?: PenDetails;
     onclick?: () => void;
   } = $props();
+
+  const trigger = detailsTrigger(() => details);
 </script>
 
 <button
   type="button"
-  {title}
-  {onclick}
+  title={details ? undefined : title}
+  onclick={() => !trigger.suppressClick && onclick?.()}
+  {...trigger.handlers}
   aria-pressed={selected}
   class={cn(
-    'flex shrink-0 flex-col items-center gap-1 rounded-xl p-1 transition-colors hover:bg-muted',
+    'flex shrink-0 touch-manipulation flex-col items-center gap-1 rounded-xl p-1 transition-colors select-none hover:bg-muted',
     selected && 'bg-primary/12',
     size === 'sm' ? 'w-12' : size === 'lg' ? 'w-16' : 'w-full'
   )}

@@ -61,6 +61,7 @@ Inline `style` is a lint error, with one exception: CSS custom properties for da
 | Pen color chip                               | `Swatch` (`sm` in strips, `md` in grids; `checked`/`dimmed` for owned pens, `sub` for the brand)         |
 | Range preview                                | `PaletteStrip`                                                                                           |
 | Choosing a pen                               | `PenPicker`: the user's pens only, one list sorted by color; owned pens are edited in Settings → My pens |
+| Pen details on hover / long press            | `Swatch` with `details`; one `PenInfoCard` in the layout shows them                                      |
 | Pan, zoom and tap on the page                | `Viewport`                                                                                               |
 | Photo corners                                | `CornerEditor` (magnifier while dragging)                                                                |
 | Area scan after creating or importing a page | `ScanOverlay` (WebGL, skipped with reduced motion)                                                       |

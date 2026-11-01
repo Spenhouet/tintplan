@@ -113,5 +113,6 @@
   "family_violet": "Violett",
   "family_pink": "Pink",
   "family_brown": "Braun",
-  "family_gray": "Weiß & Grau"
+  "family_gray": "Weiß & Grau",
+  "former_code": "früher {code}"
 }

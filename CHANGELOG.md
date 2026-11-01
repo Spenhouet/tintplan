@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.0 - 2026-11-01
+
+### Features
+
+- Pen details: hover over a color on desktop, or long press it on a phone, to see the pen's code, name, brand and range, its color value and, for renumbered pens, the former code. In the pen picker, Settings → My pens and the editor's recent colors.
+
 ## 0.4.1 - 2026-11-01
 
 ### Fixes

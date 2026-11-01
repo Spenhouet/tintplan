@@ -97,7 +97,14 @@
             <Swatch
               hex={pen.hex}
               code={pen.code}
-              title={pen.alt ? `${pen.name} (${pen.alt})` : pen.name}
+              details={{
+                code: pen.code,
+                name: pen.name,
+                hex: pen.hex,
+                brand: info?.brand,
+                range: info?.name,
+                alt: pen.alt
+              }}
               checked={owned.has(pen.code)}
               dimmed={!owned.has(pen.code)}
               onclick={() => settings.toggleOwned(id, pen.code)}

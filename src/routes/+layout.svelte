@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { ModeWatcher } from 'mode-watcher';
   import { Toaster } from '$lib/components/ui/sonner';
+  import PenInfoCard from '$lib/components/app/PenInfoCard.svelte';
   import { onNavigate } from '$app/navigation';
   import { initNative } from '$lib/native';
   import { getLocale } from '$lib/paraglide/runtime';
@@ -47,3 +48,5 @@
 />
 
 {@render children()}
+
+<PenInfoCard />
