@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { setMode, userPrefersMode } from 'mode-watcher';
-  import { ExternalLink } from '@lucide/svelte';
+  import { ExternalLink, Palette } from '@lucide/svelte';
   import PageHeader from '$lib/components/app/PageHeader.svelte';
   import Group from '$lib/components/app/Group.svelte';
   import Row from '$lib/components/app/Row.svelte';
@@ -31,6 +31,15 @@
   <PageHeader title={m.settings()} back={resolve('/')} />
 
   <div class="flex flex-col gap-6">
+    <Group footer={m.my_pens_row_hint()}>
+      <Row
+        label={m.my_pens()}
+        value={settings.ownedCount === 1 ? m.pens_count_one() : m.pens_count_other({ count: settings.ownedCount })}
+        href={resolve('/settings/pens')}
+        icon={Palette}
+      />
+    </Group>
+
     <Group title={m.settings_appearance()}>
       <div class="flex flex-col gap-2 px-4 py-3">
         <span class="text-body">{m.settings_language()}</span>

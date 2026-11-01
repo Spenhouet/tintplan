@@ -50,18 +50,20 @@ Inline `style` is a lint error, with one exception: CSS custom properties for da
 
 ## Components
 
-| Need                                         | Use                                                                                                    |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Action                                       | `Button` (`default`, `secondary`, `outline`, `ghost`, `destructive`, `link`, `floating` over the page) |
-| Two to four options                          | `Segmented`                                                                                            |
-| Bottom sheet / dialog                        | `Sheet`; `Confirm` for destructive confirmation only                                                   |
-| Settings list                                | `Group` with `Row` children                                                                            |
-| Form field with label                        | `Field` wrapping `Input` or `NativeSelect` (options may carry a `group`)                               |
-| Page title bar                               | `PageHeader`                                                                                           |
-| Pen color chip                               | `Swatch` (`sm` in strips, `md` in grids)                                                               |
-| Pan, zoom and tap on the page                | `Viewport`                                                                                             |
-| Photo corners                                | `CornerEditor` (magnifier while dragging)                                                              |
-| Area scan after creating or importing a page | `ScanOverlay` (WebGL, skipped with reduced motion)                                                     |
+| Need                                         | Use                                                                                                      |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Action                                       | `Button` (`default`, `secondary`, `outline`, `ghost`, `destructive`, `link`, `floating` over the page)   |
+| Two to four options                          | `Segmented`                                                                                              |
+| Bottom sheet / dialog                        | `Sheet`; `Confirm` for destructive confirmation only                                                     |
+| Settings list                                | `Group` with `Row` children                                                                              |
+| Form field with label                        | `Field` wrapping `Input` or `NativeSelect` (options may carry a `group`)                                 |
+| Page title bar                               | `PageHeader`                                                                                             |
+| Pen color chip                               | `Swatch` (`sm` in strips, `md` in grids; `checked`/`dimmed` for owned pens, `sub` for the brand)         |
+| Range preview                                | `PaletteStrip`                                                                                           |
+| Choosing a pen                               | `PenPicker`: the user's pens only, one list sorted by color; owned pens are edited in Settings → My pens |
+| Pan, zoom and tap on the page                | `Viewport`                                                                                               |
+| Photo corners                                | `CornerEditor` (magnifier while dragging)                                                                |
+| Area scan after creating or importing a page | `ScanOverlay` (WebGL, skipped with reduced motion)                                                       |
 
 Pages may add layout classes to a component. They may not change its padding, typography, color, shape or effects; add a variant instead.
 

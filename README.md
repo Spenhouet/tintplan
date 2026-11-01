@@ -24,8 +24,8 @@
 ## Features
 
 - **17 palettes, 3,273 pens**: Copic Sketch, Ciao and Classic; Ohuhu Honolulu, Oahu and Kaala (new codes, old codes searchable); DecoTime; Faber-Castell Polychromos, Albrecht Dürer, Goldfaber and Black Edition; Caran d'Ache Luminance, Pablo, Supracolor, Museum Aquarelle and Neocolor II; Finecolour.
-- **My pens**: mark the pens you own, one by one or by whole sets (for example Polychromos 60 or Copic Sketch 72 A), and the picker shows only those.
-- **Pen picker** with search by code, name or hex, pens already on the page and recently used pens. A quick strip under the page switches pens with one tap.
+- **My pens** (in Settings): choose the pens you own by whole sets (for example Polychromos 60 or Copic Sketch 72 A) or one by one, across brands. The picker shows only these, in one list sorted by color.
+- **Pen picker** with search by code, name or hex. Next to the current pen, the pens used on the page, most recent first, switch with one tap.
 - **Tools**: fill, erase, pick a pen from an area, undo and redo, replace or remove a pen everywhere.
 - **Export preview** before saving or sharing.
 - **Pens used** list with how many areas each pen fills, a shopping list for your coloring session.

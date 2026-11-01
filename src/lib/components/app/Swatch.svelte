@@ -10,6 +10,7 @@
     size = 'md',
     dimmed = false,
     checked = false,
+    sub,
     title,
     onclick
   }: {
@@ -21,6 +22,8 @@
     dimmed?: boolean;
     /** Shows a check mark, for owned pens while editing the collection. */
     checked?: boolean;
+    /** Small second line under the code, e.g. the brand. */
+    sub?: string;
     title?: string;
     onclick?: () => void;
   } = $props();
@@ -53,4 +56,5 @@
     {/if}
   </span>
   <span class="max-w-full truncate text-caption font-medium tabular">{code}</span>
+  {#if sub}<span class="-mt-1 max-w-full truncate text-2xs text-muted-foreground">{sub}</span>{/if}
 </button>

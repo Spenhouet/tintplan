@@ -57,6 +57,16 @@ class Settings {
     this.#save();
   }
 
+  /** Owned codes of every palette. */
+  get ownedAll(): Record<string, string[]> {
+    return this.#s.owned;
+  }
+
+  /** How many pens the user owns in total. */
+  get ownedCount(): number {
+    return Object.values(this.#s.owned).reduce((n, codes) => n + codes.length, 0);
+  }
+
   /** Codes owned in a palette. Empty when the user hasn't marked any. */
   owned(paletteId: string): string[] {
     return this.#s.owned[paletteId] ?? [];

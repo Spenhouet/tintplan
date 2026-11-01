@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.4.0 - 2026-11-01
+
+### Features
+
+- My pens moved to Settings: choose whole sets or single pens from any brand and range. Each range shows how many of its pens you own.
+- The pen picker in the editor is one list of your pens from all brands, sorted as a color gradient, with search. It no longer has brand, range or set selectors.
+- Editor bar: the current pen on the left opens the picker. Next to it are the pens used on this page, most recent first, without the current one. The "+ Pens" button is gone.
+
 ## 0.3.0 - 2026-10-31
 
 ### Features

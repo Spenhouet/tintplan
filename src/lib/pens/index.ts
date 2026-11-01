@@ -12,6 +12,9 @@ export function paletteInfo(id: string): PaletteInfo | undefined {
   return palettes.find((p) => p.id === id);
 }
 
+/** Brand name that fits under a swatch. */
+export const brandShort = (brand: string) => ({ 'Faber-Castell': 'Faber', "Caran d'Ache": 'Caran' })[brand] ?? brand;
+
 export const paletteLabel = (p: Pick<PaletteInfo, 'brand' | 'name'>) => `${p.brand} ${p.name}`;
 
 export async function loadPalette(id: string): Promise<Palette> {
@@ -46,4 +49,66 @@ export function matchesQuery(pen: Pen, q: string): boolean {
     (pen.alt?.toLowerCase().includes(s) ?? false) ||
     pen.hex.includes(s.replace('#', ''))
   );
+}
+
+/** A pen the user owns, with where it comes from. */
+export interface OwnedPen {
+  p: string;
+  c: string;
+  hex: string;
+  n: string;
+  brand: string;
+  range: string;
+  alt?: string;
+}
+
+/** OKLCH lightness, chroma and hue (degrees) of `#rrggbb`. */
+export function oklch(hex: string): { l: number; c: number; h: number } {
+  const v = parseInt(hex.slice(1), 16);
+  const lin = (x: number) => {
+    const s = x / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const r = lin((v >> 16) & 255);
+  const g = lin((v >> 8) & 255);
+  const b = lin(v & 255);
+  const l_ = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m_ = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s_ = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_;
+  const A = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_;
+  const B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_;
+  return { l: L, c: Math.hypot(A, B), h: (Math.atan2(B, A) * 180) / Math.PI + 360 };
+}
+
+/**
+ * Order pens as a color gradient: chromatic pens by hue in 15° steps starting at red, light to dark
+ * within each step; grays, whites and blacks last, light to dark.
+ */
+export function sortByColor<T extends { hex: string }>(pens: T[]): T[] {
+  const keyed = pens.map((pen) => {
+    const { l, c, h } = oklch(pen.hex);
+    if (c < 0.035) return { pen, group: 1, bucket: 0, l };
+    // Start the wheel at pinkish red (~ -10° in OKLCH) so reds don't split across both ends
+    const hue = (h + 10) % 360;
+    return { pen, group: 0, bucket: Math.floor(hue / 15), l };
+  });
+  keyed.sort((a, b) => a.group - b.group || a.bucket - b.bucket || b.l - a.l);
+  return keyed.map((k) => k.pen);
+}
+
+/** All pens the user owns, across ranges, sorted as a color gradient. */
+export async function loadOwned(owned: Record<string, string[]>): Promise<OwnedPen[]> {
+  const out: OwnedPen[] = [];
+  for (const [id, codes] of Object.entries(owned)) {
+    const info = paletteInfo(id);
+    if (!info || !codes.length) continue;
+    const palette = await loadPalette(id);
+    const set = new Set(codes);
+    for (const pen of palette.pens) {
+      if (!set.has(pen.code)) continue;
+      out.push({ p: id, c: pen.code, hex: pen.hex, n: pen.name, brand: info.brand, range: info.name, alt: pen.alt });
+    }
+  }
+  return sortByColor(out);
 }

@@ -12,7 +12,8 @@
     Maximize,
     PaintBucket,
     Pipette,
-    Plus,
+    ChevronUp,
+    Palette,
     Redo2,
     Share,
     Undo2
@@ -26,6 +27,7 @@
   import RenameSheet from '$lib/components/app/RenameSheet.svelte';
   import { Button } from '$lib/components/ui/button';
   import { fade, scale } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
   import { haptic } from '$lib/native';
   import { Editor, type Tool } from '$lib/editor.svelte';
   import { settings, type PenRef } from '$lib/settings.svelte';
@@ -73,14 +75,8 @@
     return editor.labels(settings.labelScale);
   });
 
-  /** Pens for the quick strip: this page's, then recent ones. */
-  const strip = $derived.by(() => {
-    if (!editor) return [];
-    void editor.version;
-    const used = editor.usedPens().map((u) => u.pen);
-    const rest = settings.recent.filter((r) => !used.some((u) => u.p === r.p && u.c === r.c));
-    return [...used, ...rest].slice(0, 30);
-  });
+  /** This page's recently used pens, newest first, without the current pen. */
+  const strip = $derived(editor ? editor.recent.filter((r) => r.p !== editor!.pen?.p || r.c !== editor!.pen?.c) : []);
 
   let viewport = $state<Viewport>();
   let zoomed = $state(false);
@@ -222,48 +218,44 @@
 
   {#if editor}
     <div class="shrink-0 border-t bg-card pb-safe">
-      <div class="flex items-center gap-1 px-2 pt-2">
+      <div class="flex items-center gap-2 px-2 pt-2">
+        <!-- The current pen; the only way to choose another pen from the full list -->
         <button
           type="button"
-          class="flex shrink-0 flex-col items-center gap-1 rounded-xl p-1 hover:bg-muted"
+          class="flex shrink-0 flex-col items-center gap-1 rounded-xl p-1 transition-all hover:bg-muted active:scale-95"
           aria-label={m.choose_pen()}
           onclick={() => (pickerOpen = true)}
         >
           {#if editor.pen}
             <span
-              class="flex h-10 w-16 items-center justify-center rounded-lg bg-(--c) ring-2 ring-primary ring-offset-2 ring-offset-card"
+              class="relative flex h-10 w-16 items-center justify-center rounded-lg bg-(--c) ring-2 ring-primary ring-offset-2 ring-offset-card"
               style="--c: {editor.pen.hex}"
-            ></span>
+            >
+              <span
+                class="absolute -right-1.5 -bottom-1.5 flex size-5 items-center justify-center rounded-full bg-card text-foreground shadow-sm ring-1 ring-border"
+              >
+                <ChevronUp class="size-3.5" />
+              </span>
+            </span>
             <span class="max-w-16 truncate text-caption font-semibold tabular">{editor.pen.c}</span>
           {:else}
-            <span class="flex h-10 w-16 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Plus class="size-5" />
+            <span
+              class="flex h-10 w-16 items-center justify-center rounded-lg border-2 border-dashed border-primary/50 text-primary"
+            >
+              <Palette class="size-5" />
             </span>
-            <span class="text-caption font-medium">{m.pens()}</span>
+            <span class="text-caption font-medium">{m.choose_pen_short()}</span>
           {/if}
         </button>
-        <div class="flex min-w-0 flex-1 gap-0.5 overflow-x-auto">
+        <div class="h-10 w-px shrink-0 bg-border"></div>
+        <div class="flex min-w-0 flex-1 gap-0.5 overflow-x-auto" aria-label={m.recently_used()}>
           {#each strip as p (p.p + p.c)}
-            <Swatch
-              size="sm"
-              hex={p.hex}
-              code={p.c}
-              title={p.n}
-              selected={editor.pen?.p === p.p && editor.pen?.c === p.c}
-              onclick={() => editor?.choosePen(p)}
-            />
+            <div animate:flip={{ duration: 200 }}>
+              <Swatch size="sm" hex={p.hex} code={p.c} title={p.n} onclick={() => editor?.choosePen(p)} />
+            </div>
+          {:else}
+            <span class="self-center px-2 text-xs text-muted-foreground">{m.recently_used_empty()}</span>
           {/each}
-          <button
-            type="button"
-            class="flex w-12 shrink-0 flex-col items-center gap-1 rounded-xl p-1 text-muted-foreground hover:bg-muted"
-            aria-label={m.choose_pen()}
-            onclick={() => (pickerOpen = true)}
-          >
-            <span class="flex h-8 w-full items-center justify-center rounded-lg border border-dashed"
-              ><Plus class="size-4" /></span
-            >
-            <span class="text-caption font-medium">{m.pens()}</span>
-          </button>
         </div>
       </div>
       <div class="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 pt-1 pb-2" role="toolbar">
@@ -295,7 +287,7 @@
       </div>
     </div>
 
-    <PenPicker bind:open={pickerOpen} {editor} />
+    <PenPicker bind:open={pickerOpen} current={editor.pen} onpick={(pen) => editor?.choosePen(pen)} />
     <LegendSheet
       bind:open={legendOpen}
       {editor}
@@ -308,7 +300,6 @@
     />
     <PenPicker
       bind:open={replaceOpen}
-      {editor}
       replacing={replaceFrom}
       onpick={(to) => {
         const from = replaceFrom;
